@@ -13,9 +13,7 @@ interface DriverStanding {
     familyName: string
     nationality: string
   }
-  Constructor: {
-    name: string
-  }
+  Constructors: Array<{ name: string }>
 }
 
 interface ConstructorStanding {
@@ -108,7 +106,7 @@ export default async function StandingsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">
-                        {d.Constructor.name}
+                        {d.Constructors?.[0]?.name ?? ''}
                       </td>
                       <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
                         {d.wins}
