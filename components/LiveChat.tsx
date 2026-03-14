@@ -104,7 +104,7 @@ export default function LiveChat({ allComments, currentUserId, isLoggedIn }: Liv
             return (
               <div key={c.id} className="text-xs border-b border-gray-50 pb-2.5 last:border-0">
                 {/* 예측 문항 */}
-                <p className="text-gray-400 text-[10px] leading-tight truncate mb-0.5">{c.prediction_question}</p>
+                <p className="text-gray-400 text-xs leading-tight truncate mb-0.5">{c.prediction_question}</p>
 
                 {/* 닉네임 + 선택지 + 시간 */}
                 <div className="flex items-center gap-1 flex-wrap mb-0.5">
@@ -112,7 +112,7 @@ export default function LiveChat({ allComments, currentUserId, isLoggedIn }: Liv
                   {c.bets && (
                     <span className="text-blue-600 font-medium">[{c.bets.selected_option}]</span>
                   )}
-                  <span className="text-gray-400 text-[10px] ml-auto">{timeAgo(c.created_at)}</span>
+                  <span className="text-gray-400 text-xs ml-auto">{timeAgo(c.created_at)}</span>
                 </div>
 
                 {/* 내용 or 수정 입력 */}

@@ -26,7 +26,7 @@ export default async function Header() {
         </Link>
 
         {/* 네비게이션 */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="flex items-center gap-4 sm:gap-6">
           <Link href="/" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
             일정
           </Link>

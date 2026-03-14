@@ -172,7 +172,7 @@ export default async function MyPage() {
         </div>
 
         {/* 통계 요약 */}
-        <div className="mt-5 pt-5 border-t border-gray-100 grid grid-cols-4 gap-3 text-center">
+        <div className="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
             <p className="text-2xl font-black text-gray-900">{totalBets}</p>
             <p className="text-gray-400 text-xs mt-0.5">총 배팅</p>
@@ -232,8 +232,8 @@ export default async function MyPage() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span>
                         선택: <span className="text-gray-700 font-medium">{bet.selected_option}</span>
                       </span>
