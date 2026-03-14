@@ -5,9 +5,27 @@ import Header from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : 'http://localhost:3000'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'LapPoint - F1 승부 예측',
-  description: 'F1 그랑프리 결과를 예측하고 포인트를 획득하세요.',
+  description: 'F1 그랑프리 결과를 예측하고 포인트를 획득하세요. 가입 즉시 1,000P 지급!',
+  openGraph: {
+    title: 'LapPoint - F1 승부 예측',
+    description: 'F1 그랑프리 결과를 예측하고 포인트를 획득하세요. 가입 즉시 1,000P 지급!',
+    type: 'website',
+    locale: 'ko_KR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'LapPoint - F1 승부 예측',
+    description: 'F1 그랑프리 결과를 예측하고 포인트를 획득하세요.',
+  },
 }
 
 export default function RootLayout({
