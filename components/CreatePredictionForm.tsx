@@ -3,6 +3,9 @@
 import { useState, useTransition } from 'react'
 import { createPrediction } from '@/app/actions/predictions'
 
+type PredictionType = 'race_winner' | 'race_constructor' | 'fastest_lap' | 'pole_position' | 'podium_yn' | 'finisher_count' | 'qualifying_duel' | 'custom'
+type SessionType = 'race' | 'qualifying' | 'sprint' | 'sprint_qualifying'
+
 interface Props {
   raceId: string
 }
@@ -11,7 +14,8 @@ export default function CreatePredictionForm({ raceId }: Props) {
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [question, setQuestion] = useState('')
-  const [predictionType, setPredictionType] = useState<'race_winner' | 'custom'>('custom')
+  const [predictionType, setPredictionType] = useState<PredictionType>('custom')
+  const [sessionType, setSessionType] = useState<SessionType>('race')
   const [options, setOptions] = useState(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -34,7 +38,7 @@ export default function CreatePredictionForm({ raceId }: Props) {
   const handleSubmit = () => {
     setError(null)
     startTransition(async () => {
-      const res = await createPrediction(raceId, question, options, predictionType)
+      const res = await createPrediction(raceId, question, options, predictionType, sessionType)
       if (!res.success) {
         setError(res.error ?? '오류가 발생했습니다.')
         return
@@ -43,6 +47,7 @@ export default function CreatePredictionForm({ raceId }: Props) {
       setQuestion('')
       setOptions(['', ''])
       setPredictionType('custom')
+      setSessionType('race')
       setTimeout(() => {
         setSuccess(false)
         setOpen(false)
@@ -66,6 +71,21 @@ export default function CreatePredictionForm({ raceId }: Props) {
             <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
           </div>
 
+          {/* 세션 타입 */}
+          <div>
+            <label className="text-xs text-gray-500 font-medium block mb-1">세션</label>
+            <select
+              value={sessionType}
+              onChange={(e) => setSessionType(e.target.value as SessionType)}
+              className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:outline-none focus:border-blue-400"
+            >
+              <option value="race">결승 레이스</option>
+              <option value="qualifying">예선 (Qualifying)</option>
+              <option value="sprint">스프린트 레이스</option>
+              <option value="sprint_qualifying">스프린트 예선</option>
+            </select>
+          </div>
+
           {/* 질문 */}
           <div>
             <label className="text-xs text-gray-500 font-medium block mb-1">질문</label>
@@ -83,19 +103,23 @@ export default function CreatePredictionForm({ raceId }: Props) {
             <label className="text-xs text-gray-500 font-medium block mb-1">타입</label>
             <select
               value={predictionType}
-              onChange={(e) => setPredictionType(e.target.value as 'race_winner' | 'custom')}
+              onChange={(e) => setPredictionType(e.target.value as PredictionType)}
               className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 focus:outline-none focus:border-blue-400"
             >
               <option value="custom">일반 (custom)</option>
-              <option value="race_winner">레이스 우승자 (자동정산 가능)</option>
+              <option value="race_winner">레이스 우승 드라이버 (자동정산)</option>
+              <option value="race_constructor">레이스 우승 팀 (자동정산)</option>
+              <option value="fastest_lap">패스티스트 랩 (자동정산)</option>
+              <option value="pole_position">폴 포지션 (자동정산)</option>
+              <option value="finisher_count">완주 차량 수 (자동정산)</option>
+              <option value="podium_yn">포디움 여부 Yes/No (자동정산)</option>
+              <option value="qualifying_duel">예선 팀메이트 대결 (자동정산)</option>
             </select>
           </div>
 
           {/* 선택지 */}
           <div>
-            <label className="text-xs text-gray-500 font-medium block mb-1">
-              선택지 {predictionType === 'race_winner' && <span className="text-blue-500">(드라이버 코드 또는 이름 입력)</span>}
-            </label>
+            <label className="text-xs text-gray-500 font-medium block mb-1">선택지</label>
             <div className="space-y-1.5">
               {options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -103,7 +127,7 @@ export default function CreatePredictionForm({ raceId }: Props) {
                     type="text"
                     value={opt}
                     onChange={(e) => updateOption(i, e.target.value)}
-                    placeholder={predictionType === 'race_winner' ? `예: VER 또는 Max Verstappen` : `선택지 ${i + 1}`}
+                    placeholder={`선택지 ${i + 1}`}
                     className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 bg-gray-50"
                   />
                   {options.length > 2 && (

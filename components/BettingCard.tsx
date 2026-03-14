@@ -22,6 +22,7 @@ interface BettingCardProps {
   userBalance: number
   isLoggedIn: boolean
   userBet?: UserBet
+  isLocked?: boolean
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -30,9 +31,11 @@ const ERROR_MESSAGES: Record<string, string> = {
   UNAUTHENTICATED: '로그인이 필요합니다.',
   USER_NOT_FOUND: '유저 정보를 찾을 수 없습니다.',
   NO_OPTION: '선택지를 먼저 골라주세요.',
+  BETTING_LOCKED: '세션이 시작되어 배팅이 마감되었습니다.',
+  ALREADY_SETTLED: '이미 정산된 항목입니다.',
 }
 
-export default function BettingCard({ prediction, userBalance, isLoggedIn, userBet }: BettingCardProps) {
+export default function BettingCard({ prediction, userBalance, isLoggedIn, userBet, isLocked = false }: BettingCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -88,7 +91,6 @@ export default function BettingCard({ prediction, userBalance, isLoggedIn, userB
           </span>
         </div>
 
-        {/* 선택지 결과 */}
         <div className="flex flex-wrap gap-2">
           {prediction.options.map((opt) => {
             const isCorrect = opt === prediction.correct_option
@@ -114,12 +116,58 @@ export default function BettingCard({ prediction, userBalance, isLoggedIn, userB
           })}
         </div>
 
-        {/* 내 결과 배너 */}
         {userBet && (
           <div className={`rounded-lg px-3 py-2.5 text-sm font-medium ${isWin ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-600'}`}>
             {isWin
               ? `적중! ${userBet.bet_amount.toLocaleString()}P 배팅 — 배당 지급 완료`
               : `실패. 정답: ${prediction.correct_option}`}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ── 배팅 마감 상태 (세션 시작됨) ─────────────────────────────
+  if (isLocked) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-gray-900 font-bold text-sm leading-snug">{prediction.question}</h3>
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full border whitespace-nowrap text-orange-600 bg-orange-50 border-orange-200">
+            배팅 마감
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {prediction.options.map((opt) => {
+            const isMyBet = userBet?.selected_option === opt
+            return (
+              <div
+                key={opt}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold border flex items-center gap-1.5
+                  ${isMyBet
+                    ? 'border-blue-300 bg-blue-50 text-blue-700'
+                    : 'border-gray-100 bg-gray-50 text-gray-400'
+                  }`}
+              >
+                {opt}
+                {isMyBet && (
+                  <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">
+                    내 선택
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+
+        {userBet ? (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5 text-sm text-blue-700 font-medium">
+            {userBet.bet_amount.toLocaleString()}P 배팅 완료 — 결과 대기 중
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-500">
+            세션이 시작되어 배팅이 마감되었습니다.
           </div>
         )}
       </div>

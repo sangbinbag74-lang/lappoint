@@ -59,6 +59,10 @@ export default async function AdminPage() {
     .filter((r) => r.status === 'completed' && r.round != null)
     .map((r) => ({ id: r.id, name: r.name, round: r.round! }))
 
+  const allRaces = (races ?? [])
+    .filter((r) => r.round != null)
+    .map((r) => ({ id: r.id, name: r.name, round: r.round! }))
+
   const statusLabel: Record<string, string> = {
     upcoming: '예측 가능',
     active: '진행 중',
@@ -86,7 +90,7 @@ export default async function AdminPage() {
               경기 결과를 확정하고 포인트를 정산합니다. 정산은 되돌릴 수 없습니다.
             </p>
           </div>
-          <SyncRacesButton completedRaces={completedRaces} />
+          <SyncRacesButton completedRaces={completedRaces} allRaces={allRaces} />
         </div>
       </div>
 
