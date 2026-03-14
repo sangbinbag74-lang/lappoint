@@ -56,7 +56,7 @@ export default async function RacesHistoryPage() {
                       className="object-cover object-center opacity-20"
                       unoptimized
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-white/40" />
                   </div>
                 )}
 

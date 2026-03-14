@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import CommentPanel from './CommentPanel'
+import CommentChat from './CommentChat'
 import type { BetComment } from '@/app/predict/[raceId]/page'
 
 interface PredictionItemProps {
@@ -12,6 +12,7 @@ interface PredictionItemProps {
   predictionId: string
   comments: BetComment[]
   userBetId?: string
+  currentUserId?: string
   isLoggedIn: boolean
   children: React.ReactNode
 }
@@ -23,7 +24,7 @@ export default function PredictionItem({
   defaultOpen = true,
   predictionId,
   comments,
-  userBetId,
+  currentUserId,
   isLoggedIn,
   children,
 }: PredictionItemProps) {
@@ -50,17 +51,28 @@ export default function PredictionItem({
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-          <CommentPanel
-            question={question}
-            predictionId={predictionId}
-            comments={comments}
-            userBetId={userBetId}
-            isLoggedIn={isLoggedIn}
-          />
+          {comments.length > 0 && (
+            <span className="text-xs text-blue-500 font-medium">💬 {comments.length}</span>
+          )}
           <span className="text-gray-400 text-xs">{open ? '접기' : '펼치기'}</span>
         </div>
       </button>
-      {open && <div className="pb-4 px-4">{children}</div>}
+
+      {open && (
+        <div className="pb-4 px-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 min-w-0">{children}</div>
+            <div className="sm:w-44 flex-shrink-0">
+              <CommentChat
+                comments={comments}
+                predictionId={predictionId}
+                currentUserId={currentUserId}
+                isLoggedIn={isLoggedIn}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

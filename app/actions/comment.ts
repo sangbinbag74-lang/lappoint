@@ -30,3 +30,72 @@ export async function postBetComment(
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
+
+export async function editComment(
+  commentId: string,
+  content: string
+): Promise<CommentResult> {
+  const trimmed = content.trim()
+  if (!trimmed || trimmed.length > 100) {
+    return { success: false, error: 'INVALID_CONTENT' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'UNAUTHENTICATED' }
+
+  const { error } = await supabase
+    .from('bet_comments')
+    .update({ content: trimmed, updated_at: new Date().toISOString() })
+    .eq('id', commentId)
+    .eq('user_id', user.id)
+
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
+export async function deleteComment(
+  commentId: string
+): Promise<CommentResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'UNAUTHENTICATED' }
+
+  const { error } = await supabase
+    .from('bet_comments')
+    .delete()
+    .eq('id', commentId)
+    .eq('user_id', user.id)
+
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
+export async function toggleLike(
+  commentId: string
+): Promise<CommentResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'UNAUTHENTICATED' }
+
+  const { data: existing } = await supabase
+    .from('comment_likes')
+    .select('id')
+    .eq('comment_id', commentId)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (existing) {
+    const { error } = await supabase
+      .from('comment_likes')
+      .delete()
+      .eq('id', existing.id)
+    if (error) return { success: false, error: error.message }
+  } else {
+    const { error } = await supabase
+      .from('comment_likes')
+      .insert({ comment_id: commentId, user_id: user.id })
+    if (error) return { success: false, error: error.message }
+  }
+  return { success: true }
+}

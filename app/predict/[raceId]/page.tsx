@@ -39,8 +39,11 @@ export interface BetComment {
   created_at: string
   prediction_id: string
   bet_id: string
+  user_id: string
   users: { nickname: string; avatar_url: string | null } | null
   bets: { selected_option: string; bet_amount: number } | null
+  likes_count: number
+  is_liked_by_me: boolean
 }
 
 export default async function PredictPage({ params }: PageProps) {
@@ -114,7 +117,7 @@ export default async function PredictPage({ params }: PageProps) {
   if (predictionIds.length > 0) {
     const { data: comments } = await supabase
       .from('bet_comments')
-      .select('id, content, created_at, prediction_id, bet_id, users(nickname, avatar_url), bets(selected_option, bet_amount)')
+      .select('id, content, created_at, prediction_id, bet_id, user_id, users(nickname, avatar_url), bets(selected_option, bet_amount)')
       .in('prediction_id', predictionIds)
       .order('created_at', { ascending: false })
       .limit(100)
@@ -123,6 +126,38 @@ export default async function PredictPage({ params }: PageProps) {
         const list = commentsMap.get(c.prediction_id) ?? []
         list.push(c as unknown as BetComment)
         commentsMap.set(c.prediction_id, list)
+      }
+    }
+  }
+
+  // 댓글 좋아요 로드
+  const commentIds: string[] = []
+  for (const list of Array.from(commentsMap.values())) {
+    for (const c of list) commentIds.push(c.id)
+  }
+  if (commentIds.length > 0) {
+    const { data: allLikes } = await supabase
+      .from('comment_likes')
+      .select('comment_id, user_id')
+      .in('comment_id', commentIds)
+    if (allLikes) {
+      const likesCountMap = new Map<string, number>()
+      const userLikedSet = new Set<string>()
+      for (const l of allLikes) {
+        likesCountMap.set(l.comment_id, (likesCountMap.get(l.comment_id) ?? 0) + 1)
+        if (user && l.user_id === user.id) userLikedSet.add(l.comment_id)
+      }
+      for (const [predId, list] of Array.from(commentsMap.entries())) {
+        commentsMap.set(predId, list.map((c) => ({
+          ...c,
+          likes_count: likesCountMap.get(c.id) ?? 0,
+          is_liked_by_me: userLikedSet.has(c.id),
+        })))
+      }
+    } else {
+      // No likes yet — set defaults
+      for (const [predId, list] of Array.from(commentsMap.entries())) {
+        commentsMap.set(predId, list.map((c) => ({ ...c, likes_count: 0, is_liked_by_me: false })))
       }
     }
   }
@@ -233,6 +268,7 @@ export default async function PredictPage({ params }: PageProps) {
                       predictionId={pred.id}
                       comments={commentsMap.get(pred.id) ?? []}
                       userBetId={userBet?.bet_id}
+                      currentUserId={user?.id}
                       isLoggedIn={!!user}
                     >
                       <BettingCard
