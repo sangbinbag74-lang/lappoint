@@ -7,16 +7,14 @@ export default function Icon() {
   return new ImageResponse(
     <div
       style={{
-        background: '#FF2800',
         width: '100%',
         height: '100%',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '7px',
       }}
     >
-      <span style={{ color: 'white', fontSize: 20, fontWeight: 900, fontFamily: 'sans-serif' }}>
+      <span style={{ color: '#FF2800', fontSize: 28, fontWeight: 900, fontFamily: 'sans-serif' }}>
         L
       </span>
     </div>,
