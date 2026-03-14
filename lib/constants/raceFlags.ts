@@ -11,6 +11,7 @@ const NAME_TO_CODE: [string, string][] = [
   ['monaco', 'mc'],
   ['canadian', 'ca'],
   ['spanish', 'es'],
+  ['barcelona', 'es'],
   ['austrian', 'at'],
   ['british', 'gb'],
   ['hungarian', 'hu'],
