@@ -58,15 +58,15 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
 
   if (prediction.is_settled) {
     return (
-      <div className="rounded-md border border-slate-700 bg-slate-800/50 p-4">
-        <p className="text-sm font-semibold text-slate-300 mb-2">{prediction.question}</p>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+        <p className="text-sm font-semibold text-gray-900 mb-2">{prediction.question}</p>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">정산 완료 →</span>
-          <span className="bg-emerald-900/50 border border-emerald-700 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded">
+          <span className="text-xs text-gray-400">정산 완료 →</span>
+          <span className="bg-green-50 border border-green-200 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">
             {prediction.correct_option}
           </span>
         </div>
-        <div className="mt-2 text-xs text-slate-500">
+        <div className="mt-2 text-xs text-gray-400">
           참여 {stats.total_bets}명 · 총 {stats.total_amount.toLocaleString()}P
         </div>
       </div>
@@ -129,31 +129,31 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
   }
 
   return (
-    <div className="rounded-md border border-slate-700 bg-slate-800/50 p-4 space-y-3">
+    <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-slate-200">{prediction.question}</p>
+          <p className="text-sm font-semibold text-gray-900">{prediction.question}</p>
           {prediction.prediction_type === 'race_winner' && (
-            <span className="text-xs text-blue-400 font-medium">자동정산 가능</span>
+            <span className="text-xs text-blue-600 font-medium">자동정산 가능</span>
           )}
         </div>
-        <span className="text-xs text-slate-500 whitespace-nowrap">
+        <span className="text-xs text-gray-400 whitespace-nowrap">
           {stats.total_bets}명 · {stats.total_amount.toLocaleString()}P
         </span>
       </div>
 
       {/* 레이스 결과 미리보기 */}
       {raceResults && raceResults.length > 0 && (
-        <div className="bg-slate-900/60 border border-slate-700 rounded p-2 space-y-1">
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1.5">실제 결과</p>
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-2 space-y-1">
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1.5">실제 결과</p>
           {raceResults.slice(0, 5).map((r) => (
             <div key={r.position} className="flex items-center gap-2 text-xs">
-              <span className={`w-4 font-black ${r.position === 1 ? 'text-yellow-400' : r.position === 2 ? 'text-gray-300' : r.position === 3 ? 'text-amber-600' : 'text-slate-500'}`}>
+              <span className={`w-4 font-black ${r.position === 1 ? 'text-yellow-500' : r.position === 2 ? 'text-gray-400' : r.position === 3 ? 'text-amber-600' : 'text-gray-400'}`}>
                 {r.position}
               </span>
-              <span className="text-slate-200 font-medium w-8">{r.driver_code}</span>
-              <span className="text-slate-400">{r.driver_name}</span>
-              <span className="text-slate-600 ml-auto">{r.constructor_name}</span>
+              <span className="text-gray-900 font-medium w-8">{r.driver_code}</span>
+              <span className="text-gray-600">{r.driver_name}</span>
+              <span className="text-gray-400 ml-auto">{r.constructor_name}</span>
             </div>
           ))}
         </div>
@@ -168,14 +168,14 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
               key={opt}
               onClick={() => setSelectedOption(opt)}
               disabled={isPending}
-              className={`px-3 py-1.5 rounded text-xs font-bold border transition-all
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all
                 ${selectedOption === opt
                   ? isAutoMatch
-                    ? 'bg-blue-900/50 border-blue-500 text-blue-300'
-                    : 'bg-slate-600 border-slate-400 text-white'
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-gray-900 border-gray-900 text-white'
                   : isAutoMatch
-                    ? 'bg-blue-900/20 border-blue-700 text-blue-400 hover:border-blue-500'
-                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-slate-200'
+                    ? 'bg-blue-50 border-blue-300 text-blue-700 hover:border-blue-500'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400 hover:text-gray-900'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {isAutoMatch && '★ '}{opt}
@@ -185,13 +185,13 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
       </div>
 
       {autoSuggestedOption && (
-        <p className="text-blue-400 text-xs">
+        <p className="text-blue-600 text-xs">
           ★ 결과 매핑: {winner?.driver_name} ({winner?.driver_code})
         </p>
       )}
 
       {result && (
-        <p className={`text-xs font-medium ${result.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+        <p className={`text-xs font-medium ${result.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
           {result.message}
         </p>
       )}
@@ -200,10 +200,9 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
         <button
           onClick={() => handleSettle(selectedOption)}
           disabled={isPending || !selectedOption}
-          className="flex-1 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800
-            disabled:text-slate-600 disabled:cursor-not-allowed
-            text-slate-200 text-xs font-bold py-2 rounded border border-slate-600
-            hover:border-slate-500 transition-all"
+          className="flex-1 bg-gray-900 hover:bg-gray-700 disabled:bg-gray-100
+            disabled:text-gray-300 disabled:cursor-not-allowed
+            text-white text-xs font-bold py-2 rounded-lg transition-all"
         >
           {isPending ? '처리 중...' : '결과 확정 및 정산'}
         </button>
@@ -212,9 +211,8 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
           <button
             onClick={handleAutoSettle}
             disabled={isPending}
-            className="px-3 py-2 bg-blue-900/40 hover:bg-blue-900/70 disabled:opacity-50
-              text-blue-400 text-xs font-bold rounded border border-blue-800
-              hover:border-blue-600 transition-all whitespace-nowrap"
+            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50
+              text-white text-xs font-bold rounded-lg transition-all whitespace-nowrap"
           >
             자동 정산
           </button>

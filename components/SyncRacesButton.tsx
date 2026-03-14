@@ -44,10 +44,10 @@ export default function SyncRacesButton({ completedRaces = [] }: Props) {
         <button
           onClick={handleCalendarSync}
           disabled={isPending}
-          className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-xs font-bold px-3 py-2 rounded-md transition-colors"
+          className="flex items-center gap-1.5 bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-700 text-xs font-bold px-3 py-2 rounded-lg border border-gray-200 transition-colors"
         >
           {isPending
-            ? <span className="inline-block w-3 h-3 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+            ? <span className="inline-block w-3 h-3 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
             : <span>↻</span>
           }
           일정 동기화
@@ -58,10 +58,10 @@ export default function SyncRacesButton({ completedRaces = [] }: Props) {
           <button
             onClick={handleResultsSync}
             disabled={isPending}
-            className="flex items-center gap-1.5 bg-blue-900/50 hover:bg-blue-900/80 disabled:opacity-50 text-blue-300 text-xs font-bold px-3 py-2 rounded-md border border-blue-800 hover:border-blue-600 transition-colors"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold px-3 py-2 rounded-lg transition-colors"
           >
             {isPending
-              ? <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-blue-200 rounded-full animate-spin" />
+              ? <span className="inline-block w-3 h-3 border-2 border-blue-300 border-t-white rounded-full animate-spin" />
               : <span>⬇</span>
             }
             결과 동기화
@@ -70,7 +70,7 @@ export default function SyncRacesButton({ completedRaces = [] }: Props) {
       </div>
 
       {result && (
-        <span className={`text-xs font-medium ${result.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>
+        <span className={`text-xs font-medium ${result.startsWith('✓') ? 'text-green-600' : 'text-red-600'}`}>
           {result}
         </span>
       )}
