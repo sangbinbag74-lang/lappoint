@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
+import AttendanceButton from '@/components/AttendanceButton'
 
 // ─── 칭호 시스템 ────────────────────────────────────────────
 type Badge = {
@@ -160,14 +161,17 @@ export default async function MyPage() {
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-gray-400 text-xs mb-1">보유 포인트</p>
-            <div className="flex items-center gap-1 justify-end">
-              <span className="text-orange-500 font-black">P</span>
-              <span className="text-2xl font-black text-gray-900">
-                {userData?.point_balance.toLocaleString()}
-              </span>
+          <div className="text-right flex flex-col items-end gap-2">
+            <div>
+              <p className="text-gray-400 text-xs mb-1">보유 포인트</p>
+              <div className="flex items-center gap-1 justify-end">
+                <span className="text-orange-500 font-black">P</span>
+                <span className="text-2xl font-black text-gray-900">
+                  {userData?.point_balance.toLocaleString()}
+                </span>
+              </div>
             </div>
+            <AttendanceButton />
           </div>
         </div>
 
