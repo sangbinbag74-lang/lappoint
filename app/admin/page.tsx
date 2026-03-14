@@ -3,18 +3,21 @@ import { createClient } from '@/lib/supabase/server'
 import SettleForm from '@/components/SettleForm'
 import SyncRacesButton from '@/components/SyncRacesButton'
 import CreatePredictionForm from '@/components/CreatePredictionForm'
+import AdminRaceSection from '@/components/AdminRaceSection'
+import BettingLockButton from '@/components/BettingLockButton'
+import PredictionLockButton from '@/components/PredictionLockButton'
 
 export default async function AdminPage() {
   const supabase = await createClient()
 
   const { data: races } = await supabase
     .from('races')
-    .select('id, name, race_date, status, round')
+    .select('id, name, race_date, qualifying_date, sprint_date, sprint_qualifying_date, status, round, betting_locked')
     .order('race_date', { ascending: false })
 
   const { data: predictions } = await supabase
     .from('predictions')
-    .select('id, race_id, question, options, correct_option, is_settled, prediction_type')
+    .select('id, race_id, question, options, correct_option, is_settled, prediction_type, session_type, manually_locked')
     .order('created_at', { ascending: true })
 
   const { data: betStats } = await supabase
@@ -65,7 +68,7 @@ export default async function AdminPage() {
     .map((r) => ({ id: r.id, name: r.name, round: r.round! }))
 
   const statusLabel: Record<string, string> = {
-    upcoming: '예측 가능',
+    upcoming: '배팅 가능',
     active: '진행 중',
     completed: '종료',
   }
@@ -77,7 +80,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-4">
       <div className="border-b border-gray-200 pb-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -110,41 +113,64 @@ export default async function AdminPage() {
           const raceDate = new Date(race.race_date).toLocaleDateString('ko-KR', {
             year: 'numeric', month: 'short', day: 'numeric',
           })
+          const defaultOpen = race.status !== 'completed'
+
+          // 세션날짜 맵 (자동마감 판별용)
+          const sessionDateMap: Record<string, string | null> = {
+            race: race.race_date,
+            qualifying: race.qualifying_date ?? null,
+            sprint: race.sprint_date ?? null,
+            sprint_qualifying: race.sprint_qualifying_date ?? null,
+          }
 
           return (
-            <section key={race.id} className="space-y-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-base font-bold text-gray-900">{race.name}</h2>
-                {race.round && <span className="text-gray-400 text-xs">R{race.round}</span>}
-                <span className="text-gray-400 text-xs">{raceDate}</span>
-                <span className={`ml-auto text-xs border px-2 py-0.5 rounded-full font-medium ${statusColor[race.status] ?? 'text-gray-500 border-gray-200'}`}>
-                  {statusLabel[race.status] ?? race.status}
-                </span>
+            <AdminRaceSection
+              key={race.id}
+              race={{ ...race, betting_locked: race.betting_locked ?? false }}
+              raceDate={raceDate}
+              statusLabel={statusLabel[race.status] ?? race.status}
+              statusColor={statusColor[race.status] ?? 'text-gray-500 border-gray-200'}
+              defaultOpen={defaultOpen}
+            >
+              {/* 배팅 금지 버튼 */}
+              <div className="flex items-center gap-2">
+                <BettingLockButton raceId={race.id} locked={race.betting_locked ?? false} />
               </div>
 
+              {/* 예측 항목 목록 */}
               {racePreds.length > 0 ? (
                 <div className="space-y-2 pl-2 border-l-2 border-gray-200">
-                  {racePreds.map((pred) => (
-                    <SettleForm
-                      key={pred.id}
-                      prediction={{
-                        id: pred.id,
-                        question: pred.question,
-                        options: pred.options as string[],
-                        is_settled: pred.is_settled,
-                        correct_option: pred.correct_option,
-                        prediction_type: pred.prediction_type ?? 'custom',
-                      }}
-                      stats={statsMap.get(pred.id) ?? { total_bets: 0, total_amount: 0 }}
-                      raceResults={raceResults ?? undefined}
-                    />
-                  ))}
+                  {racePreds.map((pred) => {
+                    const sessionDate = sessionDateMap[pred.session_type ?? 'race']
+                    const isAutoDeadline = !!sessionDate
+                    return (
+                      <div key={pred.id} className="space-y-1">
+                        <PredictionLockButton
+                          predictionId={pred.id}
+                          manuallyLocked={pred.manually_locked ?? false}
+                          isAutoDeadline={isAutoDeadline}
+                        />
+                        <SettleForm
+                          prediction={{
+                            id: pred.id,
+                            question: pred.question,
+                            options: pred.options as string[],
+                            is_settled: pred.is_settled,
+                            correct_option: pred.correct_option,
+                            prediction_type: pred.prediction_type ?? 'custom',
+                          }}
+                          stats={statsMap.get(pred.id) ?? { total_bets: 0, total_amount: 0 }}
+                          raceResults={raceResults ?? undefined}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
               ) : (
                 <p className="text-gray-400 text-sm pl-4">등록된 예측 항목 없음</p>
               )}
               <CreatePredictionForm raceId={race.id} />
-            </section>
+            </AdminRaceSection>
           )
         })
       ) : (

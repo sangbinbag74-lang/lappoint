@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { placeBet } from '@/app/actions/bet'
 import { postBetComment } from '@/app/actions/comment'
 import { getDriverColor } from '@/lib/constants/teamColors'
+import { getDriverNameKo } from '@/lib/constants/driverNames'
+import { getDriverTeamLogo } from '@/lib/constants/teamLogos'
 
 interface Prediction {
   id: string
@@ -183,14 +185,20 @@ export default function BettingCard({
             const isCorrect = opt === prediction.correct_option
             const isUserPick = userBet?.selected_option === opt
             const color = getDriverColor(opt)
+            const koName = getDriverNameKo(opt)
+            const logoSrc = getDriverTeamLogo(opt)
             return (
               <div key={opt} className={`flex items-center gap-0 rounded-lg border overflow-hidden
                 ${isCorrect ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 opacity-60'}`}>
                 <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? (isCorrect ? '#22c55e' : '#e5e7eb') }} />
                 <div className="flex items-center justify-between flex-1 px-3 py-2">
-                  <span className={`text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-gray-500'}`}>
-                    {isCorrect && '✓ '}{opt}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {logoSrc && <img src={logoSrc} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
+                    <span className={`text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-gray-500'}`}>
+                      {isCorrect && '✓ '}{opt}
+                      {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2">
                     {isUserPick && <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">내 선택</span>}
                     {betStats[opt] && <span className="text-gray-400 text-xs tabular-nums">{betStats[opt].total.toLocaleString()}P</span>}
@@ -223,6 +231,8 @@ export default function BettingCard({
           {prediction.options.map((opt) => {
             const isUserPick = userBet?.selected_option === opt
             const color = getDriverColor(opt)
+            const koName = getDriverNameKo(opt)
+            const logoSrc = getDriverTeamLogo(opt)
             const stat = betStats[opt]
             const pct = totalBetAmount > 0 && stat ? Math.round((stat.total / totalBetAmount) * 100) : null
             return (
@@ -230,9 +240,13 @@ export default function BettingCard({
                 ${isUserPick ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
                 <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? '#e5e7eb' }} />
                 <div className="flex items-center justify-between flex-1 px-3 py-2">
-                  <span className={`text-sm font-semibold ${isUserPick ? 'text-blue-700' : 'text-gray-600'}`}>
-                    {isUserPick && '✓ '}{opt}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {logoSrc && <img src={logoSrc} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
+                    <span className={`text-sm font-semibold ${isUserPick ? 'text-blue-700' : 'text-gray-600'}`}>
+                      {isUserPick && '✓ '}{opt}
+                      {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400 tabular-nums">
                     {pct !== null && <span>{pct}%</span>}
                     {stat && <span>{stat.total.toLocaleString()}P</span>}
@@ -270,6 +284,8 @@ export default function BettingCard({
         {prediction.options.map((opt) => {
           const isSelected = selectedOption === opt
           const color = getDriverColor(opt)
+          const koName = getDriverNameKo(opt)
+          const logoSrc = getDriverTeamLogo(opt)
           const stat = betStats[opt]
           const pct = totalBetAmount > 0 && stat ? Math.round((stat.total / totalBetAmount) * 100) : null
           return (
@@ -283,9 +299,13 @@ export default function BettingCard({
             >
               <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? (isSelected ? '#3b82f6' : '#e5e7eb') }} />
               <div className="flex items-center justify-between flex-1 px-3 py-2.5">
-                <span className={`text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
-                  {isSelected && '✓ '}{opt}
-                </span>
+                <div className="flex items-center gap-2">
+                  {logoSrc && <img src={logoSrc} alt="" className="w-5 h-5 object-contain flex-shrink-0" />}
+                  <span className={`text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
+                    {isSelected && '✓ '}{opt}
+                    {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
+                  </span>
+                </div>
                 {(pct !== null || stat) && (
                   <div className="flex items-center gap-2 text-xs text-gray-400 tabular-nums">
                     {pct !== null && <span>{pct}%</span>}

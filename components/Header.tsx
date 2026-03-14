@@ -30,6 +30,9 @@ export default async function Header() {
           <Link href="/" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
             일정
           </Link>
+          <Link href="/standings" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+            순위
+          </Link>
           <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
             랭킹
           </Link>
