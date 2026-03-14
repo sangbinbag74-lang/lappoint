@@ -5,11 +5,7 @@ import Header from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
+const siteUrl = 'https://lappoint.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
