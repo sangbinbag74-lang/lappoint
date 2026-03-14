@@ -5,7 +5,7 @@ import Header from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const siteUrl = 'https://lappoint.vercel.app'
+const siteUrl = 'https://lappoint.xyz'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
