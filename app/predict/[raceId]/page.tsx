@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import BettingCard from '@/components/BettingCard'
 import AttendanceButton from '@/components/AttendanceButton'
+import PredictionSection from '@/components/PredictionSection'
 
 interface PageProps {
   params: Promise<{ raceId: string }>
@@ -11,12 +12,35 @@ type SessionType = 'race' | 'qualifying' | 'sprint' | 'sprint_qualifying'
 
 const SESSION_CONFIG: Record<SessionType, { label: string; icon: string; color: string }> = {
   sprint_qualifying: { label: '스프린트 예선', icon: 'SQ', color: 'text-purple-700 bg-purple-50 border-purple-200' },
-  qualifying:        { label: '예선 (Qualifying)', icon: 'Q',  color: 'text-blue-700 bg-blue-50 border-blue-200' },
-  sprint:            { label: '스프린트 레이스',   icon: 'S',  color: 'text-orange-700 bg-orange-50 border-orange-200' },
-  race:              { label: '결승 레이스',       icon: 'R',  color: 'text-red-700 bg-red-50 border-red-200' },
+  sprint:            { label: '스프린트 레이스', icon: 'S', color: 'text-orange-700 bg-orange-50 border-orange-200' },
+  qualifying:        { label: '예선 (Qualifying)', icon: 'Q', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+  race:              { label: '결승 레이스', icon: 'R', color: 'text-red-700 bg-red-50 border-red-200' },
 }
 
-const SESSION_ORDER: SessionType[] = ['sprint_qualifying', 'qualifying', 'sprint', 'race']
+// 세션 표시 순서: 스프린트예선 → 스프린트 → 예선 → 결승
+const SESSION_ORDER: SessionType[] = ['sprint_qualifying', 'sprint', 'qualifying', 'race']
+
+// 세션 내 예측 항목 정렬 우선순위
+const TYPE_PRIORITY: Record<string, number> = {
+  pole_position: 0,
+  qualifying_duel: 2,
+  race_winner: 10,
+  race_constructor: 11,
+  fastest_lap: 12,
+  podium_yn: 20,
+  custom: 30,
+  finisher_count: 40,
+}
+
+export interface BetComment {
+  id: string
+  content: string
+  created_at: string
+  prediction_id: string
+  bet_id: string
+  users: { nickname: string; avatar_url: string | null } | null
+  bets: { selected_option: string; bet_amount: number } | null
+}
 
 export default async function PredictPage({ params }: PageProps) {
   const { raceId } = await params
@@ -32,8 +56,9 @@ export default async function PredictPage({ params }: PageProps) {
 
   const { data: predictions } = await supabase
     .from('predictions')
-    .select('id, question, options, is_settled, correct_option, session_type')
+    .select('id, question, options, is_settled, correct_option, session_type, prediction_type, sort_order')
     .eq('race_id', raceId)
+    .order('sort_order', { ascending: true })
     .order('created_at', { ascending: true })
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -48,23 +73,60 @@ export default async function PredictPage({ params }: PageProps) {
     pointBalance = userData?.point_balance ?? 0
   }
 
+  const predictionIds = predictions?.map((p) => p.id) ?? []
+
   // 유저 배팅 내역
-  const userBetMap = new Map<string, { selected_option: string; bet_amount: number }>()
-  if (user && predictions && predictions.length > 0) {
-    const predictionIds = predictions.map((p) => p.id)
+  const userBetMap = new Map<string, { selected_option: string; bet_amount: number; bet_id: string }>()
+  if (user && predictionIds.length > 0) {
     const { data: userBets } = await supabase
       .from('bets')
-      .select('prediction_id, selected_option, bet_amount')
+      .select('id, prediction_id, selected_option, bet_amount')
       .eq('user_id', user.id)
       .in('prediction_id', predictionIds)
     if (userBets) {
       for (const b of userBets) {
-        userBetMap.set(b.prediction_id, { selected_option: b.selected_option, bet_amount: b.bet_amount })
+        userBetMap.set(b.prediction_id, { selected_option: b.selected_option, bet_amount: b.bet_amount, bet_id: b.id })
       }
     }
   }
 
-  // 세션별 예측 그룹핑
+  // 배팅 분포 집계 (전체 유저)
+  type BetStat = { count: number; total: number }
+  const betStatsMap = new Map<string, Record<string, BetStat>>()
+  if (predictionIds.length > 0) {
+    const { data: allBets } = await supabase
+      .from('bets')
+      .select('prediction_id, selected_option, bet_amount')
+      .in('prediction_id', predictionIds)
+    if (allBets) {
+      for (const b of allBets) {
+        const predStats = betStatsMap.get(b.prediction_id) ?? {}
+        const cur = predStats[b.selected_option] ?? { count: 0, total: 0 }
+        predStats[b.selected_option] = { count: cur.count + 1, total: cur.total + b.bet_amount }
+        betStatsMap.set(b.prediction_id, predStats)
+      }
+    }
+  }
+
+  // 댓글 로드
+  const commentsMap = new Map<string, BetComment[]>()
+  if (predictionIds.length > 0) {
+    const { data: comments } = await supabase
+      .from('bet_comments')
+      .select('id, content, created_at, prediction_id, bet_id, users(nickname, avatar_url), bets(selected_option, bet_amount)')
+      .in('prediction_id', predictionIds)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (comments) {
+      for (const c of comments) {
+        const list = commentsMap.get(c.prediction_id) ?? []
+        list.push(c as unknown as BetComment)
+        commentsMap.set(c.prediction_id, list)
+      }
+    }
+  }
+
+  // 세션별 예측 그룹핑 + 정렬
   const predsBySession = new Map<SessionType, typeof predictions>()
   if (predictions) {
     for (const p of predictions) {
@@ -73,18 +135,27 @@ export default async function PredictPage({ params }: PageProps) {
       list.push(p)
       predsBySession.set(sType, list)
     }
+    // 세션 내 prediction_type 우선순위 정렬
+    for (const st of Array.from(predsBySession.keys())) {
+      const preds = predsBySession.get(st)
+      preds!.sort((a, b) => {
+        const aPrio = TYPE_PRIORITY[a.prediction_type ?? 'custom'] ?? 30
+        const bPrio = TYPE_PRIORITY[b.prediction_type ?? 'custom'] ?? 30
+        return aPrio - bPrio
+      })
+      predsBySession.set(st, preds ?? null)
+    }
   }
 
   const now = new Date()
 
   const sessionDates: Record<SessionType, string | null> = {
     sprint_qualifying: race.sprint_qualifying_date ?? null,
-    qualifying:        race.qualifying_date ?? null,
     sprint:            race.sprint_date ?? null,
+    qualifying:        race.qualifying_date ?? null,
     race:              race.race_date,
   }
 
-  // 세션 표시 조건: 날짜가 있거나 해당 세션에 예측 항목이 있는 경우 (race는 항상)
   const activeSessions = SESSION_ORDER.filter(
     (s) => s === 'race' || sessionDates[s] !== null || (predsBySession.get(s)?.length ?? 0) > 0
   )
@@ -129,7 +200,7 @@ export default async function PredictPage({ params }: PageProps) {
 
       {/* 세션별 예측 항목 */}
       {predictions && predictions.length > 0 ? (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {activeSessions.map((sessionType) => {
             const sessionPreds = predsBySession.get(sessionType) ?? []
             if (sessionPreds.length === 0) return null
@@ -137,51 +208,42 @@ export default async function PredictPage({ params }: PageProps) {
             const cfg = SESSION_CONFIG[sessionType]
             const sessionDate = sessionDates[sessionType]
             const isLocked = sessionDate != null && new Date(sessionDate) <= now
-
-            const sessionDateStr = sessionDate
-              ? new Date(sessionDate).toLocaleDateString('ko-KR', {
-                  month: 'short', day: 'numeric', weekday: 'short', hour: '2-digit', minute: '2-digit',
-                })
-              : null
+            const isCompleted = race.status === 'completed'
+            const defaultOpen = !isCompleted || sessionType === 'race'
 
             return (
-              <section key={sessionType} className="space-y-3">
-                {/* 세션 헤더 */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${cfg.color}`}>
-                    {cfg.icon}
-                  </span>
-                  <h2 className="text-sm font-bold text-gray-800">{cfg.label}</h2>
-                  {sessionDateStr && (
-                    <span className="text-gray-400 text-xs">{sessionDateStr}</span>
-                  )}
-                  {isLocked && (
-                    <span className="ml-auto text-xs font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
-                      배팅 마감
-                    </span>
-                  )}
-                </div>
-
-                {/* 해당 세션 예측 카드들 */}
-                <div className="space-y-3">
-                  {sessionPreds.map((pred) => (
-                    <BettingCard
-                      key={pred.id}
-                      prediction={{
-                        id: pred.id,
-                        question: pred.question,
-                        options: pred.options as string[],
-                        is_settled: pred.is_settled,
-                        correct_option: pred.correct_option,
-                      }}
-                      userBalance={pointBalance}
-                      isLoggedIn={!!user}
-                      userBet={userBetMap.get(pred.id)}
-                      isLocked={isLocked}
-                    />
-                  ))}
-                </div>
-              </section>
+              <PredictionSection
+                key={sessionType}
+                title={`${cfg.label} (${sessionPreds.length})`}
+                date={sessionDate}
+                isLocked={isLocked}
+                defaultOpen={defaultOpen}
+              >
+                {sessionPreds.map((pred) => {
+                  const userBet = userBetMap.get(pred.id)
+                  return (
+                    <div key={pred.id} className="p-4">
+                      <BettingCard
+                        prediction={{
+                          id: pred.id,
+                          question: pred.question,
+                          options: pred.options as string[],
+                          is_settled: pred.is_settled,
+                          correct_option: pred.correct_option,
+                        }}
+                        userBalance={pointBalance}
+                        isLoggedIn={!!user}
+                        userBet={userBet ? { selected_option: userBet.selected_option, bet_amount: userBet.bet_amount } : undefined}
+                        isLocked={isLocked}
+                        betStats={betStatsMap.get(pred.id) ?? {}}
+                        deadline={sessionDate}
+                        comments={commentsMap.get(pred.id) ?? []}
+                        userBetId={userBet?.bet_id}
+                      />
+                    </div>
+                  )
+                })}
+              </PredictionSection>
             )
           })}
         </div>

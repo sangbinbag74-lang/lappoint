@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 
 // ─── 칭호 시스템 ────────────────────────────────────────────
@@ -34,7 +36,7 @@ export default async function MyPage() {
   // 유저 정보 조회
   const { data: userData } = await supabase
     .from('users')
-    .select('nickname, point_balance, created_at')
+    .select('nickname, point_balance, created_at, avatar_url')
     .eq('id', user.id)
     .single()
 
@@ -137,15 +139,26 @@ export default async function MyPage() {
       {/* 유저 요약 카드 */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-black text-gray-900">{userData?.nickname}</h1>
-            <p className="text-gray-400 text-sm mt-0.5">{user.email}</p>
-            {/* 칭호 뱃지 */}
-            <span
-              className={`inline-block mt-3 text-xs font-bold px-2.5 py-1 rounded-full border ${badge.color}`}
-            >
-              {badge.label}
-            </span>
+          <div className="flex items-start gap-4">
+            {/* 아바타 */}
+            <div className="relative w-14 h-14 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center border border-gray-200">
+              {userData?.avatar_url ? (
+                <Image src={userData.avatar_url} alt="프로필" fill className="object-cover" unoptimized />
+              ) : (
+                <span className="text-2xl">👤</span>
+              )}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black text-gray-900">{userData?.nickname}</h1>
+                <Link href="/mypage/edit" className="text-xs text-blue-600 hover:underline font-medium">수정</Link>
+              </div>
+              <p className="text-gray-400 text-sm mt-0.5">{user.email}</p>
+              {/* 칭호 뱃지 */}
+              <span className={`inline-block mt-2 text-xs font-bold px-2.5 py-1 rounded-full border ${badge.color}`}>
+                {badge.label}
+              </span>
+            </div>
           </div>
           <div className="text-right">
             <p className="text-gray-400 text-xs mb-1">보유 포인트</p>
