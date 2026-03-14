@@ -112,8 +112,8 @@ export default function CommentPanel({
 
           {/* 플로팅 팝업 창 */}
           <div
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
-            style={{ maxHeight: '70vh' }}
+            className="fixed right-4 top-16 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+            style={{ maxHeight: 'calc(100vh - 80px)' }}
           >
             {/* 팝업 헤더 */}
             <div className="flex items-start justify-between px-4 py-3.5 border-b border-gray-100 flex-shrink-0 bg-gray-50">
