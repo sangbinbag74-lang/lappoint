@@ -21,7 +21,7 @@ export default async function PredictPage({ params }: PageProps) {
 
   const { data: predictions } = await supabase
     .from('predictions')
-    .select('id, question, options')
+    .select('id, question, options, is_settled, correct_option')
     .eq('race_id', raceId)
     .order('created_at', { ascending: true })
 
@@ -35,6 +35,22 @@ export default async function PredictPage({ params }: PageProps) {
       .eq('id', user.id)
       .single()
     pointBalance = userData?.point_balance ?? 0
+  }
+
+  // 유저 배팅 내역 (정산 결과 표시용)
+  const userBetMap = new Map<string, { selected_option: string; bet_amount: number }>()
+  if (user && predictions && predictions.length > 0) {
+    const predictionIds = predictions.map((p) => p.id)
+    const { data: userBets } = await supabase
+      .from('bets')
+      .select('prediction_id, selected_option, bet_amount')
+      .eq('user_id', user.id)
+      .in('prediction_id', predictionIds)
+    if (userBets) {
+      for (const b of userBets) {
+        userBetMap.set(b.prediction_id, { selected_option: b.selected_option, bet_amount: b.bet_amount })
+      }
+    }
   }
 
   const raceDate = new Date(race.race_date).toLocaleDateString('ko-KR', {
@@ -88,9 +104,12 @@ export default async function PredictPage({ params }: PageProps) {
                 id: pred.id,
                 question: pred.question,
                 options: pred.options as string[],
+                is_settled: pred.is_settled,
+                correct_option: pred.correct_option,
               }}
               userBalance={pointBalance}
               isLoggedIn={!!user}
+              userBet={userBetMap.get(pred.id)}
             />
           ))}
         </section>

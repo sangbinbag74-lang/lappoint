@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import SettleForm from '@/components/SettleForm'
 import SyncRacesButton from '@/components/SyncRacesButton'
+import CreatePredictionForm from '@/components/CreatePredictionForm'
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -129,6 +130,7 @@ export default async function AdminPage() {
               ) : (
                 <p className="text-gray-400 text-sm pl-4">등록된 예측 항목 없음</p>
               )}
+              <CreatePredictionForm raceId={race.id} />
             </section>
           )
         })
