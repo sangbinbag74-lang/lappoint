@@ -11,7 +11,6 @@ export default async function PredictPage({ params }: PageProps) {
   const { raceId } = await params
   const supabase = await createClient()
 
-  // 경기 정보 조회
   const { data: race } = await supabase
     .from('races')
     .select('*')
@@ -20,17 +19,13 @@ export default async function PredictPage({ params }: PageProps) {
 
   if (!race) notFound()
 
-  // 예측 항목 목록 조회
   const { data: predictions } = await supabase
     .from('predictions')
     .select('id, question, options')
     .eq('race_id', raceId)
     .order('created_at', { ascending: true })
 
-  // 현재 유저 + 포인트 조회
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
   let pointBalance = 0
   if (user) {
@@ -43,60 +38,48 @@ export default async function PredictPage({ params }: PageProps) {
   }
 
   const raceDate = new Date(race.race_date).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
+    year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
   })
 
-  const statusLabel: Record<string, string> = {
-    upcoming: '예측 가능',
-    active: '진행 중',
-    completed: '종료',
+  const statusConfig: Record<string, { label: string; className: string }> = {
+    upcoming: { label: '예측 가능', className: 'text-green-700 bg-green-50 border-green-200' },
+    active:   { label: '진행 중',   className: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
+    completed:{ label: '종료',      className: 'text-gray-500 bg-gray-100 border-gray-200' },
   }
-  const statusColor: Record<string, string> = {
-    upcoming: 'text-green-400 bg-green-400/10 border-green-400/30',
-    active: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30',
-    completed: 'text-gray-500 bg-gray-800 border-gray-700',
-  }
+  const status = statusConfig[race.status] ?? statusConfig.upcoming
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* 경기 헤더 */}
-      <div className="bg-gray-900 border border-gray-800 rounded-md p-6">
+      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-gray-500 text-xs font-bold tracking-widest uppercase mb-2">
-              F1 그랑프리
-            </p>
-            <h1 className="text-2xl font-black text-white">{race.name}</h1>
-            <p className="text-gray-400 text-sm mt-2">{raceDate}</p>
+            <p className="text-gray-400 text-xs font-medium mb-1">F1 그랑프리</p>
+            <h1 className="text-xl font-black text-gray-900">{race.name}</h1>
+            <p className="text-gray-500 text-sm mt-1">{raceDate}</p>
           </div>
-          <span
-            className={`text-xs font-bold px-3 py-1 rounded-full border whitespace-nowrap ${statusColor[race.status] ?? statusColor.upcoming}`}
-          >
-            {statusLabel[race.status] ?? race.status}
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${status.className}`}>
+            {status.label}
           </span>
         </div>
 
-        {/* 로그인 유저 포인트 + 출석 체크 */}
         {user && (
-          <div className="mt-5 pt-5 border-t border-gray-800 flex items-center justify-between">
+          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-[#FF2800] text-xs font-black">P</span>
-              <span className="text-white font-bold">{pointBalance.toLocaleString()}</span>
-              <span className="text-gray-500 text-sm">보유</span>
+              <span className="text-orange-500 text-xs font-bold">P</span>
+              <span className="text-gray-800 font-bold tabular-nums">{pointBalance.toLocaleString()}</span>
+              <span className="text-gray-400 text-sm">보유</span>
             </div>
             <AttendanceButton />
           </div>
         )}
       </div>
 
-      {/* 예측 항목 목록 */}
+      {/* 예측 항목 */}
       {predictions && predictions.length > 0 ? (
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold text-white">
-            예측 항목 <span className="text-gray-500 font-normal text-sm">{predictions.length}개</span>
+        <section className="space-y-3">
+          <h2 className="text-sm font-bold text-gray-600 px-1">
+            예측 항목 {predictions.length}개
           </h2>
           {predictions.map((pred) => (
             <BettingCard
@@ -112,14 +95,14 @@ export default async function PredictPage({ params }: PageProps) {
           ))}
         </section>
       ) : (
-        <div className="text-center py-12 text-gray-500">
+        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400 shadow-sm text-sm">
           아직 예측 항목이 없습니다.
         </div>
       )}
 
       {!user && (
-        <p className="text-center text-gray-500 text-sm">
-          배팅에 참여하려면 <span className="text-[#FF2800]">Google 로그인</span>이 필요합니다.
+        <p className="text-center text-gray-500 text-sm py-4">
+          배팅에 참여하려면 <span className="text-gray-900 font-semibold">Google 로그인</span>이 필요합니다.
         </p>
       )}
     </div>

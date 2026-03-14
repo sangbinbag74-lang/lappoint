@@ -26,12 +26,12 @@ export default function AttendanceButton() {
   if (message) {
     return (
       <span
-        className={`text-xs font-semibold px-3 py-1.5 rounded-md border ${
+        className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${
           message.type === 'success'
-            ? 'text-green-400 bg-green-400/10 border-green-400/30'
+            ? 'text-green-700 bg-green-50 border-green-200'
             : message.type === 'info'
-            ? 'text-gray-400 bg-gray-800 border-gray-700'
-            : 'text-red-400 bg-red-400/10 border-red-400/30'
+            ? 'text-gray-500 bg-gray-100 border-gray-200'
+            : 'text-red-600 bg-red-50 border-red-200'
         }`}
       >
         {message.text}
@@ -43,8 +43,9 @@ export default function AttendanceButton() {
     <button
       onClick={handleAttendance}
       disabled={isPending}
-      className="text-xs font-bold px-3 py-1.5 rounded-md border border-[#FF2800]/50 text-[#FF2800]
-        hover:bg-[#FF2800]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="text-xs font-bold px-3 py-1.5 rounded-full border border-gray-300 text-gray-600
+        hover:border-gray-400 hover:text-gray-800 hover:bg-gray-50 transition-colors
+        disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isPending ? '처리 중...' : '출석 체크 +100P'}
     </button>

@@ -1,49 +1,77 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { syncF1Calendar } from '@/app/actions/syncRaces'
+import { syncF1Calendar, syncRaceResults } from '@/app/actions/syncRaces'
 
-export default function SyncRacesButton() {
+interface CompletedRace {
+  id: string
+  name: string
+  round: number
+}
+
+interface Props {
+  completedRaces?: CompletedRace[]
+}
+
+export default function SyncRacesButton({ completedRaces = [] }: Props) {
   const [isPending, startTransition] = useTransition()
-  const [result, setResult] = useState<{ success: boolean; count?: number; error?: string } | null>(null)
+  const [result, setResult] = useState<string | null>(null)
 
-  const handleSync = () => {
+  const handleCalendarSync = () => {
     startTransition(async () => {
       const res = await syncF1Calendar()
-      setResult(res)
+      setResult(res.success ? `✓ ${res.count}개 경기 일정 동기화 완료` : `✗ ${res.error}`)
       setTimeout(() => setResult(null), 4000)
     })
   }
 
+  const handleResultsSync = () => {
+    startTransition(async () => {
+      let total = 0
+      for (const race of completedRaces) {
+        const res = await syncRaceResults(race.id, race.round)
+        if (res.success) total += res.count ?? 0
+      }
+      setResult(`✓ ${completedRaces.length}개 경기 결과 동기화 완료 (총 ${total}건)`)
+      setTimeout(() => setResult(null), 5000)
+    })
+  }
+
   return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={handleSync}
-        disabled={isPending}
-        className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-sm font-bold px-4 py-2 rounded-md transition-colors"
-      >
-        {isPending ? (
-          <>
-            <span className="inline-block w-3.5 h-3.5 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
-            동기화 중...
-          </>
-        ) : (
-          <>
-            <span>↻</span>
-            F1 일정 동기화
-          </>
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-2">
+        {/* 일정 동기화 */}
+        <button
+          onClick={handleCalendarSync}
+          disabled={isPending}
+          className="flex items-center gap-1.5 bg-slate-700 hover:bg-slate-600 disabled:opacity-50 text-slate-200 text-xs font-bold px-3 py-2 rounded-md transition-colors"
+        >
+          {isPending
+            ? <span className="inline-block w-3 h-3 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+            : <span>↻</span>
+          }
+          일정 동기화
+        </button>
+
+        {/* 결과 동기화 (완료된 경기 있을 때만) */}
+        {completedRaces.length > 0 && (
+          <button
+            onClick={handleResultsSync}
+            disabled={isPending}
+            className="flex items-center gap-1.5 bg-blue-900/50 hover:bg-blue-900/80 disabled:opacity-50 text-blue-300 text-xs font-bold px-3 py-2 rounded-md border border-blue-800 hover:border-blue-600 transition-colors"
+          >
+            {isPending
+              ? <span className="inline-block w-3 h-3 border-2 border-blue-500 border-t-blue-200 rounded-full animate-spin" />
+              : <span>⬇</span>
+            }
+            결과 동기화
+          </button>
         )}
-      </button>
+      </div>
 
       {result && (
-        <span
-          className={`text-xs font-medium ${
-            result.success ? 'text-green-400' : 'text-red-400'
-          }`}
-        >
-          {result.success
-            ? `✓ ${result.count}개 경기 동기화 완료`
-            : `✗ 오류: ${result.error}`}
+        <span className={`text-xs font-medium ${result.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>
+          {result}
         </span>
       )}
     </div>

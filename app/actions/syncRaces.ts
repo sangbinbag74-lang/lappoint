@@ -74,23 +74,17 @@ export async function syncF1Calendar() {
   return { success: true, count: upsertRows.length }
 }
 
-// 특정 라운드의 레이스 결과를 Jolpica API에서 가져옴 (어드민 정산 참고용)
-export type RaceResult = {
-  position: string
-  Driver: { code: string; givenName: string; familyName: string }
-  Constructor: { name: string }
-  status: string
-  points: string
-}
+// Jolpica API 결과를 race_results 테이블에 저장 (어드민 전용)
+export async function syncRaceResults(raceId: string, round: number) {
+  const supabase = await createClient()
 
-export async function fetchRaceResults(round: number): Promise<{
-  success: boolean
-  results?: RaceResult[]
-  raceName?: string
-  error?: string
-}> {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user || user.email !== process.env.ADMIN_EMAIL) {
+    return { success: false, error: 'UNAUTHORIZED' }
+  }
+
   const res = await fetch(`${JOLPICA_BASE}/${SEASON}/${round}/results.json`, {
-    next: { revalidate: 300 }, // 5분 캐시
+    cache: 'no-store',
   })
 
   if (!res.ok) {
@@ -98,15 +92,37 @@ export async function fetchRaceResults(round: number): Promise<{
   }
 
   const json = await res.json()
-  const races = json?.MRData?.RaceTable?.Races ?? []
+  const apiRaces = json?.MRData?.RaceTable?.Races ?? []
 
-  if (races.length === 0) {
+  if (apiRaces.length === 0) {
     return { success: false, error: 'NO_RESULTS_YET' }
   }
 
-  return {
-    success: true,
-    raceName: races[0].raceName,
-    results: races[0].Results as RaceResult[],
+  const apiResults = apiRaces[0].Results as Array<{
+    position: string
+    Driver: { code: string; givenName: string; familyName: string }
+    Constructor: { name: string }
+    status: string
+  }>
+
+  const rows = apiResults.map((r) => ({
+    race_id: raceId,
+    position: parseInt(r.position, 10),
+    driver_code: r.Driver.code,
+    driver_name: `${r.Driver.givenName} ${r.Driver.familyName}`,
+    constructor_name: r.Constructor.name,
+    status: r.status,
+    synced_at: new Date().toISOString(),
+  }))
+
+  const { error } = await supabase
+    .from('race_results')
+    .upsert(rows, { onConflict: 'race_id,position' })
+
+  if (error) {
+    return { success: false, error: error.message }
   }
+
+  revalidatePath('/admin')
+  return { success: true, count: rows.length }
 }
