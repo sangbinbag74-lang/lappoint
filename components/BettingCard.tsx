@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { placeBet } from '@/app/actions/bet'
 import { postBetComment } from '@/app/actions/comment'
 import { getDriverColor } from '@/lib/constants/teamColors'
-import type { BetComment } from '@/app/predict/[raceId]/page'
 
 interface Prediction {
   id: string
@@ -24,7 +23,6 @@ interface BettingCardProps {
   isLocked?: boolean
   betStats?: Record<string, { count: number; total: number }>
   deadline?: string | null
-  comments?: BetComment[]
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -62,43 +60,40 @@ function TimeLeft({ deadline }: { deadline: string }) {
   return <span className="text-gray-400 text-xs flex-shrink-0">⏱ {label}</span>
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return '방금'
-  if (mins < 60) return `${mins}분 전`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}시간 전`
-  return `${Math.floor(hrs / 24)}일 전`
+// 모듈 레벨 정의 — 내부 정의 시 매 렌더마다 새 컴포넌트 타입으로 인식되어 한글 IME 버그 발생
+interface CommentInputProps {
+  commentText: string
+  setCommentText: (v: string) => void
+  onSubmit: () => void
+  onSkip: () => void
+  isPending: boolean
 }
 
-function CommentSection({ comments }: { comments: BetComment[] }) {
-  if (comments.length === 0) return null
+function CommentInput({ commentText, setCommentText, onSubmit, onSkip, isPending }: CommentInputProps) {
   return (
     <div className="pt-2 border-t border-gray-100 space-y-2">
-      <p className="text-xs text-gray-400 font-medium">의견 {comments.length}</p>
-      <div className="space-y-2">
-        {comments.slice(0, 5).map((c) => (
-          <div key={c.id} className="flex items-start gap-2">
-            <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">👤</span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-semibold text-gray-700">{c.users?.nickname ?? '익명'}</span>
-                {c.bets && (
-                  <>
-                    <span className="text-gray-300 text-xs">·</span>
-                    <span className="text-xs text-blue-600 font-medium">{c.bets.selected_option}</span>
-                    <span className="text-gray-300 text-xs">·</span>
-                    <span className="text-xs text-gray-400">{c.bets.bet_amount.toLocaleString()}P</span>
-                  </>
-                )}
-                <span className="text-gray-300 text-xs">·</span>
-                <span className="text-xs text-gray-400">{timeAgo(c.created_at)}</span>
-              </div>
-              <p className="text-xs text-gray-600 mt-0.5 leading-snug">{c.content}</p>
-            </div>
-          </div>
-        ))}
+      <p className="text-xs text-gray-500 font-medium">의견 남기기 (선택)</p>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          maxLength={100}
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) onSubmit() }}
+          placeholder="한 줄 의견을 남겨보세요..."
+          className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
+            focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
+        />
+        <button
+          onClick={onSubmit}
+          disabled={isPending}
+          className="text-xs font-bold px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+        >
+          등록
+        </button>
+        <button onClick={onSkip} className="text-xs text-gray-400 hover:text-gray-600 px-2">
+          건너뛰기
+        </button>
       </div>
     </div>
   )
@@ -113,7 +108,6 @@ export default function BettingCard({
   isLocked = false,
   betStats = {},
   deadline,
-  comments = [],
 }: BettingCardProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -170,35 +164,6 @@ export default function BettingCard({
     })
   }
 
-  const CommentInput = () => (
-    !commentDone ? (
-      <div className="pt-2 border-t border-gray-100 space-y-2">
-        <p className="text-xs text-gray-500 font-medium">의견 남기기 (선택)</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            maxLength={100}
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="한 줄 의견을 남겨보세요..."
-            className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2
-              focus:outline-none focus:border-blue-400 focus:bg-white transition-colors"
-          />
-          <button
-            onClick={handleComment}
-            disabled={isCommentPending}
-            className="text-xs font-bold px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
-          >
-            등록
-          </button>
-          <button onClick={() => setCommentDone(true)} className="text-xs text-gray-400 hover:text-gray-600 px-2">
-            건너뛰기
-          </button>
-        </div>
-      </div>
-    ) : null
-  )
-
   // ── 정산 완료 ────────────────────────────────────────────
   if (prediction.is_settled && prediction.correct_option) {
     return (
@@ -233,7 +198,6 @@ export default function BettingCard({
               : `실패. 정답: ${prediction.correct_option}`}
           </p>
         )}
-        <CommentSection comments={comments} />
       </div>
     )
   }
@@ -271,8 +235,15 @@ export default function BettingCard({
         </div>
         {userBet && <p className="text-xs text-gray-500">{userBet.bet_amount.toLocaleString()}P 배팅 완료 — 결과 대기 중</p>}
         {isLocked && !userBet && <p className="text-xs text-orange-500 font-medium">세션이 시작되어 배팅이 마감되었습니다.</p>}
-        {userBet && <CommentInput />}
-        <CommentSection comments={comments} />
+        {userBet && !commentDone && (
+          <CommentInput
+            commentText={commentText}
+            setCommentText={setCommentText}
+            onSubmit={handleComment}
+            onSkip={() => setCommentDone(true)}
+            isPending={isCommentPending}
+          />
+        )}
       </div>
     )
   }
@@ -348,7 +319,15 @@ export default function BettingCard({
           <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
             <p className="text-green-700 text-sm font-medium">{successMsg}</p>
           </div>
-          <CommentInput />
+          {!commentDone && (
+            <CommentInput
+              commentText={commentText}
+              setCommentText={setCommentText}
+              onSubmit={handleComment}
+              onSkip={() => setCommentDone(true)}
+              isPending={isCommentPending}
+            />
+          )}
         </div>
       ) : (
         <button
@@ -360,8 +339,6 @@ export default function BettingCard({
           {isPending ? '처리 중...' : '배팅하기'}
         </button>
       )}
-
-      <CommentSection comments={comments} />
     </div>
   )
 }

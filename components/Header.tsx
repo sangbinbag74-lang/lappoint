@@ -20,9 +20,12 @@ export default async function Header() {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         {/* 로고 */}
-        <Link href="/" className="flex items-center gap-0.5">
-          <span className="text-[#FF2800] font-black text-lg tracking-tight">LAP</span>
-          <span className="text-gray-900 font-black text-lg tracking-tight">POINT</span>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="bg-[#FF2800] text-white font-black text-sm w-6 h-6 flex items-center justify-center rounded-md flex-shrink-0">L</span>
+          <span className="flex items-center gap-0">
+            <span className="text-[#FF2800] font-black text-lg tracking-tight">LAP</span>
+            <span className="text-gray-900 font-black text-lg tracking-tight">POINT</span>
+          </span>
         </Link>
 
         {/* 네비게이션 */}

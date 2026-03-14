@@ -230,6 +230,10 @@ export default async function PredictPage({ params }: PageProps) {
                       isSettled={pred.is_settled}
                       hasUserBet={!!userBet}
                       defaultOpen={!!userBet}
+                      predictionId={pred.id}
+                      comments={commentsMap.get(pred.id) ?? []}
+                      userBetId={userBet?.bet_id}
+                      isLoggedIn={!!user}
                     >
                       <BettingCard
                         prediction={{
@@ -245,7 +249,6 @@ export default async function PredictPage({ params }: PageProps) {
                         isLocked={isLocked}
                         betStats={betStatsMap.get(pred.id) ?? {}}
                         deadline={sessionDate}
-                        comments={commentsMap.get(pred.id) ?? []}
                         userBetId={userBet?.bet_id}
                       />
                     </PredictionItem>

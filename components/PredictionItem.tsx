@@ -1,12 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import CommentPanel from './CommentPanel'
+import type { BetComment } from '@/app/predict/[raceId]/page'
 
 interface PredictionItemProps {
   question: string
   isSettled: boolean
   hasUserBet: boolean
   defaultOpen?: boolean
+  predictionId: string
+  comments: BetComment[]
+  userBetId?: string
+  isLoggedIn: boolean
   children: React.ReactNode
 }
 
@@ -15,6 +21,10 @@ export default function PredictionItem({
   isSettled,
   hasUserBet,
   defaultOpen = true,
+  predictionId,
+  comments,
+  userBetId,
+  isLoggedIn,
   children,
 }: PredictionItemProps) {
   const [open, setOpen] = useState(defaultOpen)
@@ -39,7 +49,16 @@ export default function PredictionItem({
             </span>
           )}
         </div>
-        <span className="text-gray-400 text-xs flex-shrink-0 ml-2">{open ? '접기' : '펼치기'}</span>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <CommentPanel
+            question={question}
+            predictionId={predictionId}
+            comments={comments}
+            userBetId={userBetId}
+            isLoggedIn={isLoggedIn}
+          />
+          <span className="text-gray-400 text-xs">{open ? '접기' : '펼치기'}</span>
+        </div>
       </button>
       {open && <div className="pb-4 px-4">{children}</div>}
     </div>
