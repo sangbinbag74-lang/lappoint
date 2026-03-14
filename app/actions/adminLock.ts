@@ -18,6 +18,7 @@ export async function toggleRaceBettingLock(raceId: string, locked: boolean) {
   await admin.from('races').update({ betting_locked: locked }).eq('id', raceId)
   revalidatePath('/admin')
   revalidatePath('/')
+  revalidatePath('/predict/[raceId]', 'page')
 }
 
 export async function togglePredictionManualLock(predictionId: string, locked: boolean) {

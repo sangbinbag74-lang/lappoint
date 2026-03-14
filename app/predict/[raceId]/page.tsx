@@ -55,7 +55,7 @@ export default async function PredictPage({ params }: PageProps) {
   const [raceRes, authRes, predsRes] = await Promise.all([
     supabase
       .from('races')
-      .select('id, name, race_date, status, qualifying_date, sprint_date, sprint_qualifying_date')
+      .select('id, name, race_date, status, qualifying_date, sprint_date, sprint_qualifying_date, betting_locked')
       .eq('id', raceId)
       .single(),
     supabase.auth.getUser(),
@@ -207,7 +207,10 @@ export default async function PredictPage({ params }: PageProps) {
     active:   { label: '진행 중',   className: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
     completed:{ label: '종료',      className: 'text-gray-500 bg-gray-100 border-gray-200' },
   }
-  const status = statusConfig[race.status] ?? statusConfig.upcoming
+  const raceBettingLocked = (race as typeof race & { betting_locked?: boolean }).betting_locked ?? false
+  const status = raceBettingLocked
+    ? { label: '배팅 금지', className: 'text-red-700 bg-red-50 border-red-200' }
+    : (statusConfig[race.status] ?? statusConfig.upcoming)
 
   return (
     <div className="flex gap-4 items-start max-w-5xl mx-auto">
@@ -246,7 +249,7 @@ export default async function PredictPage({ params }: PageProps) {
 
             const cfg = SESSION_CONFIG[sessionType]
             const sessionDate = sessionDates[sessionType]
-            const isLocked = sessionDate != null && new Date(sessionDate) <= now
+            const isLocked = raceBettingLocked || (sessionDate != null && new Date(sessionDate) <= now)
             const defaultOpen = !isLocked
 
             return (

@@ -8,7 +8,7 @@ export default async function HomePage() {
 
   const { data: upcomingRaces } = await supabase
     .from('races')
-    .select('id, name, race_date, status')
+    .select('id, name, race_date, status, betting_locked')
     .in('status', ['upcoming', 'active'])
     .order('race_date', { ascending: true })
 
@@ -26,20 +26,23 @@ export default async function HomePage() {
     .limit(3)
 
   const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
-    upcoming: { label: '배팅 가능', dot: 'bg-green-500', text: 'text-green-700' },
-    active:   { label: '진행 중',   dot: 'bg-yellow-500', text: 'text-yellow-700' },
-    completed:{ label: '종료',      dot: 'bg-gray-400',   text: 'text-gray-400' },
+    upcoming:       { label: '배팅 가능', dot: 'bg-green-500',  text: 'text-green-700' },
+    active:         { label: '진행 중',   dot: 'bg-yellow-500', text: 'text-yellow-700' },
+    completed:      { label: '종료',      dot: 'bg-gray-400',   text: 'text-gray-400' },
+    betting_locked: { label: '배팅 금지', dot: 'bg-red-500',    text: 'text-red-600' },
   }
   const rankIcons = ['🥇', '🥈', '🥉']
 
   const RaceRow = ({ race, isCompleted = false }: {
-    race: { id: string; name: string; race_date: string; status: string }
+    race: { id: string; name: string; race_date: string; status: string; betting_locked?: boolean }
     isCompleted?: boolean
   }) => {
     const date = new Date(race.race_date).toLocaleDateString('ko-KR', {
       month: 'short', day: 'numeric', weekday: 'short',
     })
-    const cfg = statusConfig[race.status] ?? statusConfig.upcoming
+    const cfg = race.betting_locked
+      ? statusConfig.betting_locked
+      : (statusConfig[race.status] ?? statusConfig.upcoming)
     const countryCode = getRaceCountryCode(race.name)
 
     return (
