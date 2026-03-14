@@ -51,87 +51,81 @@ export default async function PredictPage({ params }: PageProps) {
   const { raceId } = await params
   const supabase = await createClient()
 
-  const { data: race } = await supabase
-    .from('races')
-    .select('id, name, race_date, status, qualifying_date, sprint_date, sprint_qualifying_date')
-    .eq('id', raceId)
-    .single()
+  // 배치 1 — 독립 쿼리 병렬 실행
+  const [raceRes, authRes, predsRes] = await Promise.all([
+    supabase
+      .from('races')
+      .select('id, name, race_date, status, qualifying_date, sprint_date, sprint_qualifying_date')
+      .eq('id', raceId)
+      .single(),
+    supabase.auth.getUser(),
+    supabase
+      .from('predictions')
+      .select('id, question, options, is_settled, correct_option, session_type, prediction_type, sort_order')
+      .eq('race_id', raceId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+  ])
 
+  const race = raceRes.data
   if (!race) notFound()
 
-  const { data: predictions } = await supabase
-    .from('predictions')
-    .select('id, question, options, is_settled, correct_option, session_type, prediction_type, sort_order')
-    .eq('race_id', raceId)
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: true })
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  let pointBalance = 0
-  if (user) {
-    const { data: userData } = await supabase
-      .from('users')
-      .select('point_balance')
-      .eq('id', user.id)
-      .single()
-    pointBalance = userData?.point_balance ?? 0
-  }
-
+  const user = authRes.data.user
+  const predictions = predsRes.data
   const predictionIds = predictions?.map((p) => p.id) ?? []
+
+  // 배치 2 — 배치1 결과 기반 병렬 실행
+  const [userDataRes, userBetsRes, allBetsRes, commentsRes] = await Promise.all([
+    user
+      ? supabase.from('users').select('point_balance').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+    user && predictionIds.length > 0
+      ? supabase.from('bets').select('id, prediction_id, selected_option, bet_amount').eq('user_id', user.id).in('prediction_id', predictionIds)
+      : Promise.resolve({ data: null }),
+    predictionIds.length > 0
+      ? supabase.from('bets').select('prediction_id, selected_option, bet_amount').in('prediction_id', predictionIds)
+      : Promise.resolve({ data: null }),
+    predictionIds.length > 0
+      ? supabase.from('bet_comments').select('id, content, created_at, prediction_id, bet_id, user_id, users(nickname, avatar_url), bets(selected_option, bet_amount)').in('prediction_id', predictionIds).order('created_at', { ascending: false }).limit(100)
+      : Promise.resolve({ data: null }),
+  ])
+
+  const pointBalance = (userDataRes.data as { point_balance: number } | null)?.point_balance ?? 0
 
   // 유저 배팅 내역
   const userBetMap = new Map<string, { selected_option: string; bet_amount: number; bet_id: string }>()
-  if (user && predictionIds.length > 0) {
-    const { data: userBets } = await supabase
-      .from('bets')
-      .select('id, prediction_id, selected_option, bet_amount')
-      .eq('user_id', user.id)
-      .in('prediction_id', predictionIds)
-    if (userBets) {
-      for (const b of userBets) {
-        userBetMap.set(b.prediction_id, { selected_option: b.selected_option, bet_amount: b.bet_amount, bet_id: b.id })
-      }
+  const rawUserBets = userBetsRes.data as { id: string; prediction_id: string; selected_option: string; bet_amount: number }[] | null
+  if (rawUserBets) {
+    for (const b of rawUserBets) {
+      userBetMap.set(b.prediction_id, { selected_option: b.selected_option, bet_amount: b.bet_amount, bet_id: b.id })
     }
   }
 
   // 배팅 분포 집계 (전체 유저)
   type BetStat = { count: number; total: number }
   const betStatsMap = new Map<string, Record<string, BetStat>>()
-  if (predictionIds.length > 0) {
-    const { data: allBets } = await supabase
-      .from('bets')
-      .select('prediction_id, selected_option, bet_amount')
-      .in('prediction_id', predictionIds)
-    if (allBets) {
-      for (const b of allBets) {
-        const predStats = betStatsMap.get(b.prediction_id) ?? {}
-        const cur = predStats[b.selected_option] ?? { count: 0, total: 0 }
-        predStats[b.selected_option] = { count: cur.count + 1, total: cur.total + b.bet_amount }
-        betStatsMap.set(b.prediction_id, predStats)
-      }
+  const rawAllBets = allBetsRes.data as { prediction_id: string; selected_option: string; bet_amount: number }[] | null
+  if (rawAllBets) {
+    for (const b of rawAllBets) {
+      const predStats = betStatsMap.get(b.prediction_id) ?? {}
+      const cur = predStats[b.selected_option] ?? { count: 0, total: 0 }
+      predStats[b.selected_option] = { count: cur.count + 1, total: cur.total + b.bet_amount }
+      betStatsMap.set(b.prediction_id, predStats)
     }
   }
 
-  // 댓글 로드
+  // 댓글 맵 구성
   const commentsMap = new Map<string, BetComment[]>()
-  if (predictionIds.length > 0) {
-    const { data: comments } = await supabase
-      .from('bet_comments')
-      .select('id, content, created_at, prediction_id, bet_id, user_id, users(nickname, avatar_url), bets(selected_option, bet_amount)')
-      .in('prediction_id', predictionIds)
-      .order('created_at', { ascending: false })
-      .limit(100)
-    if (comments) {
-      for (const c of comments) {
-        const list = commentsMap.get(c.prediction_id) ?? []
-        list.push(c as unknown as BetComment)
-        commentsMap.set(c.prediction_id, list)
-      }
+  const rawComments = commentsRes.data as unknown as BetComment[] | null
+  if (rawComments) {
+    for (const c of rawComments) {
+      const list = commentsMap.get(c.prediction_id) ?? []
+      list.push(c)
+      commentsMap.set(c.prediction_id, list)
     }
   }
 
-  // 댓글 좋아요 로드
+  // 배치 3 — 댓글 좋아요 로드
   const commentIds: string[] = []
   for (const list of Array.from(commentsMap.values())) {
     for (const c of list) commentIds.push(c.id)
@@ -156,7 +150,6 @@ export default async function PredictPage({ params }: PageProps) {
         })))
       }
     } else {
-      // No likes yet — set defaults
       for (const [predId, list] of Array.from(commentsMap.entries())) {
         commentsMap.set(predId, list.map((c) => ({ ...c, likes_count: 0, is_liked_by_me: false })))
       }
@@ -210,7 +203,7 @@ export default async function PredictPage({ params }: PageProps) {
   })
 
   const statusConfig: Record<string, { label: string; className: string }> = {
-    upcoming: { label: '예측 가능', className: 'text-green-700 bg-green-50 border-green-200' },
+    upcoming: { label: '배팅 가능', className: 'text-green-700 bg-green-50 border-green-200' },
     active:   { label: '진행 중',   className: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
     completed:{ label: '종료',      className: 'text-gray-500 bg-gray-100 border-gray-200' },
   }

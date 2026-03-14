@@ -53,18 +53,27 @@ export default function LiveChat({ allComments, currentUserId, isLoggedIn }: Liv
   const router = useRouter()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editText, setEditText] = useState('')
+  const [editError, setEditError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const handleEditStart = (c: LiveChatComment) => {
     setEditingId(c.id)
     setEditText(c.content)
+    setEditError(null)
   }
 
   const handleEditSubmit = (commentId: string) => {
     const trimmed = editText.trim()
     if (!trimmed) return
+    setEditError(null)
     startTransition(async () => {
-      await editComment(commentId, trimmed)
+      const result = await editComment(commentId, trimmed)
+      if (!result.success) {
+        if (result.error === 'PROFANITY') {
+          setEditError('비속어가 포함된 댓글은 작성할 수 없습니다.')
+        }
+        return
+      }
       setEditingId(null)
       router.refresh()
     })
@@ -117,13 +126,16 @@ export default function LiveChat({ allComments, currentUserId, isLoggedIn }: Liv
 
                 {/* 내용 or 수정 입력 */}
                 {isEditing ? (
-                  <EditInput
-                    value={editText}
-                    onChange={setEditText}
-                    onSubmit={() => handleEditSubmit(c.id)}
-                    onCancel={() => setEditingId(null)}
-                    isPending={isPending}
-                  />
+                  <>
+                    <EditInput
+                      value={editText}
+                      onChange={setEditText}
+                      onSubmit={() => handleEditSubmit(c.id)}
+                      onCancel={() => setEditingId(null)}
+                      isPending={isPending}
+                    />
+                    {editError && <p className="text-red-500 text-xs mt-1">{editError}</p>}
+                  </>
                 ) : (
                   <>
                     <p className="text-gray-700 leading-snug">{c.content}</p>

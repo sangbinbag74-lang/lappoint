@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { getRaceCountryCode } from '@/lib/constants/raceFlags'
+import { getRaceCountryCode, getCountryFlagEmoji } from '@/lib/constants/raceFlags'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -26,7 +26,7 @@ export default async function HomePage() {
     .limit(3)
 
   const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
-    upcoming: { label: '예측 가능', dot: 'bg-green-500', text: 'text-green-700' },
+    upcoming: { label: '배팅 가능', dot: 'bg-green-500', text: 'text-green-700' },
     active:   { label: '진행 중',   dot: 'bg-yellow-500', text: 'text-yellow-700' },
     completed:{ label: '종료',      dot: 'bg-gray-400',   text: 'text-gray-400' },
   }
@@ -57,7 +57,7 @@ export default async function HomePage() {
               className="object-cover object-center opacity-40"
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/70 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent" />
           </div>
         )}
 
@@ -67,7 +67,7 @@ export default async function HomePage() {
             {cfg.label}
           </span>
           <span className="text-gray-800 font-medium text-sm truncate group-hover:text-gray-900">
-            {race.name}
+            {countryCode && <span className="mr-1">{getCountryFlagEmoji(countryCode)}</span>}{race.name}
           </span>
         </div>
         <div className="relative flex items-center gap-3 flex-shrink-0 ml-3">

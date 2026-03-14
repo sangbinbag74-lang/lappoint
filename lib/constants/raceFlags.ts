@@ -36,3 +36,10 @@ export function getRaceCountryCode(raceName: string): string {
   }
   return ''
 }
+
+export function getCountryFlagEmoji(code: string): string {
+  if (!code) return ''
+  return Array.from(code.toUpperCase())
+    .map(c => String.fromCodePoint(0x1F1E0 + c.charCodeAt(0) - 65))
+    .join('')
+}

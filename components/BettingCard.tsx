@@ -33,6 +33,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   NO_OPTION: '선택지를 먼저 골라주세요.',
   BETTING_LOCKED: '배팅이 마감되었습니다.',
   ALREADY_SETTLED: '이미 정산된 예측입니다.',
+  PROFANITY: '비속어가 포함된 댓글은 작성할 수 없습니다.',
 }
 
 function formatTimeLeft(deadline: string): string | null {
@@ -67,12 +68,14 @@ interface CommentInputProps {
   onSubmit: () => void
   onSkip: () => void
   isPending: boolean
+  commentError?: string | null
 }
 
-function CommentInput({ commentText, setCommentText, onSubmit, onSkip, isPending }: CommentInputProps) {
+function CommentInput({ commentText, setCommentText, onSubmit, onSkip, isPending, commentError }: CommentInputProps) {
   return (
     <div className="pt-2 border-t border-gray-100 space-y-2">
       <p className="text-xs text-gray-500 font-medium">의견 남기기 (선택)</p>
+      {commentError && <p className="text-red-500 text-xs">{commentError}</p>}
       <div className="flex gap-2">
         <input
           type="text"
@@ -121,6 +124,7 @@ export default function BettingCard({
   const [newBetId, setNewBetId] = useState<string | null>(null)
   const [commentText, setCommentText] = useState('')
   const [commentDone, setCommentDone] = useState(false)
+  const [commentError, setCommentError] = useState<string | null>(null)
 
   const betAmount = parseInt(betAmountStr, 10)
   const isValidAmount = !isNaN(betAmount) && betAmount >= 10
@@ -157,8 +161,13 @@ export default function BettingCard({
     const trimmed = commentText.trim()
     const effectiveBetId = newBetId ?? userBetId
     if (!effectiveBetId || !trimmed) { setCommentDone(true); return }
+    setCommentError(null)
     startCommentTransition(async () => {
-      await postBetComment(effectiveBetId, prediction.id, trimmed)
+      const result = await postBetComment(effectiveBetId, prediction.id, trimmed)
+      if (!result.success) {
+        setCommentError(ERROR_MESSAGES[result.error] ?? result.error)
+        return
+      }
       setCommentDone(true)
       router.refresh()
     })
@@ -242,6 +251,7 @@ export default function BettingCard({
             onSubmit={handleComment}
             onSkip={() => setCommentDone(true)}
             isPending={isCommentPending}
+            commentError={commentError}
           />
         )}
       </div>

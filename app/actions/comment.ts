@@ -4,6 +4,13 @@ import { createClient } from '@/lib/supabase/server'
 
 type CommentResult = { success: true } | { success: false; error: string }
 
+const PROFANITY_LIST = ['시발', '씨발', '개새끼', '병신', '지랄', '미친놈', '새끼', '씹', '꺼져', '죽어', 'fuck', 'shit', 'asshole', 'bastard']
+
+function hasProfanity(text: string): boolean {
+  const lower = text.toLowerCase()
+  return PROFANITY_LIST.some(w => lower.includes(w))
+}
+
 export async function postBetComment(
   betId: string,
   predictionId: string,
@@ -12,6 +19,9 @@ export async function postBetComment(
   const trimmed = content.trim()
   if (!trimmed || trimmed.length > 100) {
     return { success: false, error: 'INVALID_CONTENT' }
+  }
+  if (hasProfanity(trimmed)) {
+    return { success: false, error: 'PROFANITY' }
   }
 
   const supabase = await createClient()
@@ -38,6 +48,9 @@ export async function editComment(
   const trimmed = content.trim()
   if (!trimmed || trimmed.length > 100) {
     return { success: false, error: 'INVALID_CONTENT' }
+  }
+  if (hasProfanity(trimmed)) {
+    return { success: false, error: 'PROFANITY' }
   }
 
   const supabase = await createClient()
