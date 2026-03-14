@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import BettingCard from '@/components/BettingCard'
 import AttendanceButton from '@/components/AttendanceButton'
 import PredictionSection from '@/components/PredictionSection'
+import PredictionItem from '@/components/PredictionItem'
 
 interface PageProps {
   params: Promise<{ raceId: string }>
@@ -208,8 +209,7 @@ export default async function PredictPage({ params }: PageProps) {
             const cfg = SESSION_CONFIG[sessionType]
             const sessionDate = sessionDates[sessionType]
             const isLocked = sessionDate != null && new Date(sessionDate) <= now
-            const isCompleted = race.status === 'completed'
-            const defaultOpen = !isCompleted || sessionType === 'race'
+            const defaultOpen = !isLocked
 
             return (
               <PredictionSection
@@ -218,11 +218,19 @@ export default async function PredictPage({ params }: PageProps) {
                 date={sessionDate}
                 isLocked={isLocked}
                 defaultOpen={defaultOpen}
+                icon={cfg.icon}
+                iconColor={cfg.color}
               >
                 {sessionPreds.map((pred) => {
                   const userBet = userBetMap.get(pred.id)
                   return (
-                    <div key={pred.id} className="p-4">
+                    <PredictionItem
+                      key={pred.id}
+                      question={pred.question}
+                      isSettled={pred.is_settled}
+                      hasUserBet={!!userBet}
+                      defaultOpen={!isLocked || !!userBet}
+                    >
                       <BettingCard
                         prediction={{
                           id: pred.id,
@@ -240,7 +248,7 @@ export default async function PredictPage({ params }: PageProps) {
                         comments={commentsMap.get(pred.id) ?? []}
                         userBetId={userBet?.bet_id}
                       />
-                    </div>
+                    </PredictionItem>
                   )
                 })}
               </PredictionSection>

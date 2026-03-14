@@ -7,6 +7,8 @@ interface PredictionSectionProps {
   date: string | null
   isLocked: boolean
   defaultOpen: boolean
+  icon: string
+  iconColor: string
   children: React.ReactNode
 }
 
@@ -15,6 +17,8 @@ export default function PredictionSection({
   date,
   isLocked,
   defaultOpen,
+  icon,
+  iconColor,
   children,
 }: PredictionSectionProps) {
   const [open, setOpen] = useState(defaultOpen)
@@ -34,6 +38,7 @@ export default function PredictionSection({
       >
         <div className="flex items-center gap-3">
           <span className="text-gray-500 text-xs w-4 text-left">{open ? '▼' : '▶'}</span>
+          <span className={`text-xs font-black px-1.5 py-0.5 rounded border ${iconColor}`}>{icon}</span>
           <span className="font-bold text-gray-900 text-sm">{title}</span>
           {formattedDate && (
             <span className="text-gray-400 text-xs hidden sm:block">{formattedDate}</span>

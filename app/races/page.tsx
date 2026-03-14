@@ -48,7 +48,7 @@ export default async function RacesHistoryPage() {
               >
                 {/* 국기 이미지 오버레이 */}
                 {countryCode && (
-                  <div className="absolute right-0 top-0 h-full w-32 pointer-events-none overflow-hidden">
+                  <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
                     <Image
                       src={`https://flagcdn.com/w320/${countryCode}.png`}
                       alt=""
