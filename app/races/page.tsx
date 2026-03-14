@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { getRaceCountryCode, getCountryFlagEmoji } from '@/lib/constants/raceFlags'
+import { getRaceCountryCode } from '@/lib/constants/raceFlags'
 
 export default async function RacesHistoryPage() {
   const supabase = await createClient()
@@ -53,7 +53,7 @@ export default async function RacesHistoryPage() {
                       src={`https://flagcdn.com/w320/${countryCode}.png`}
                       alt=""
                       fill
-                      className="object-cover object-center opacity-40"
+                      className="object-cover object-top opacity-40"
                       unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent" />
@@ -66,7 +66,10 @@ export default async function RacesHistoryPage() {
                       <span className="text-gray-400 text-xs">R{race.round}</span>
                     )}
                     <span className="text-gray-800 font-semibold text-sm truncate group-hover:text-gray-900">
-                      {countryCode && <span className="mr-1">{getCountryFlagEmoji(countryCode)}</span>}{race.name}
+                      {countryCode && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`https://flagcdn.com/24x18/${countryCode}.png`} alt={countryCode} className="inline-block w-6 h-4 mr-1.5 align-middle rounded-sm" />
+                      )}{race.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
