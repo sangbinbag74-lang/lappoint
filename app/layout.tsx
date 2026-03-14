@@ -23,6 +23,9 @@ export const metadata: Metadata = {
     title: 'LapPoint - F1 승부 예측',
     description: 'F1 그랑프리 결과를 예측하고 포인트를 획득하세요.',
   },
+  verification: {
+    google: '_q4qdoTCPALR4OhQpbZXQV-h_MX2aaC9_wAxew8cSvQ',
+  },
   other: {
     'google-adsense-account': 'ca-pub-4638182627010286',
   },
