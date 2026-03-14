@@ -1,29 +1,38 @@
-// 레이스 이름 → 국기 이모지 매핑
-export function getRaceFlag(raceName: string): string {
-  const name = raceName.toLowerCase()
-  if (name.includes('bahrain')) return '🇧🇭'
-  if (name.includes('saudi')) return '🇸🇦'
-  if (name.includes('australian')) return '🇦🇺'
-  if (name.includes('japanese')) return '🇯🇵'
-  if (name.includes('chinese')) return '🇨🇳'
-  if (name.includes('miami')) return '🇺🇸'
-  if (name.includes('emilia') || name.includes('romagna')) return '🇮🇹'
-  if (name.includes('monaco')) return '🇲🇨'
-  if (name.includes('canadian')) return '🇨🇦'
-  if (name.includes('spanish')) return '🇪🇸'
-  if (name.includes('austrian')) return '🇦🇹'
-  if (name.includes('british')) return '🇬🇧'
-  if (name.includes('hungarian')) return '🇭🇺'
-  if (name.includes('belgian')) return '🇧🇪'
-  if (name.includes('dutch')) return '🇳🇱'
-  if (name.includes('italian') && !name.includes('emilia')) return '🇮🇹'
-  if (name.includes('azerbaijan')) return '🇦🇿'
-  if (name.includes('singapore')) return '🇸🇬'
-  if (name.includes('las vegas')) return '🇺🇸'
-  if (name.includes('united states')) return '🇺🇸'
-  if (name.includes('mexico')) return '🇲🇽'
-  if (name.includes('são paulo') || name.includes('sao paulo') || name.includes('brazil')) return '🇧🇷'
-  if (name.includes('qatar')) return '🇶🇦'
-  if (name.includes('abu dhabi')) return '🇦🇪'
-  return '🏎️'
+// 레이스 이름 → ISO 2자리 국가 코드 매핑
+const NAME_TO_CODE: [string, string][] = [
+  ['bahrain', 'bh'],
+  ['saudi', 'sa'],
+  ['australian', 'au'],
+  ['japanese', 'jp'],
+  ['chinese', 'cn'],
+  ['miami', 'us'],
+  ['emilia', 'it'],
+  ['romagna', 'it'],
+  ['monaco', 'mc'],
+  ['canadian', 'ca'],
+  ['spanish', 'es'],
+  ['austrian', 'at'],
+  ['british', 'gb'],
+  ['hungarian', 'hu'],
+  ['belgian', 'be'],
+  ['dutch', 'nl'],
+  ['italian', 'it'],
+  ['azerbaijan', 'az'],
+  ['singapore', 'sg'],
+  ['las vegas', 'us'],
+  ['united states', 'us'],
+  ['mexico', 'mx'],
+  ['são paulo', 'br'],
+  ['sao paulo', 'br'],
+  ['brazil', 'br'],
+  ['qatar', 'qa'],
+  ['abu dhabi', 'ae'],
+]
+
+export function getRaceCountryCode(raceName: string): string {
+  const lower = raceName.toLowerCase()
+  for (const [kw, code] of NAME_TO_CODE) {
+    if (lower.includes(kw)) return code
+  }
+  return ''
 }

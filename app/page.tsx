@@ -1,18 +1,17 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { getRaceFlag } from '@/lib/constants/raceFlags'
+import { getRaceCountryCode } from '@/lib/constants/raceFlags'
 
 export default async function HomePage() {
   const supabase = await createClient()
 
-  // 예정/진행 중 경기 전체
   const { data: upcomingRaces } = await supabase
     .from('races')
     .select('id, name, race_date, status')
     .in('status', ['upcoming', 'active'])
     .order('race_date', { ascending: true })
 
-  // 직전 완료 경기 1개
   const { data: recentCompleted } = await supabase
     .from('races')
     .select('id, name, race_date, status')
@@ -29,31 +28,38 @@ export default async function HomePage() {
   const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
     upcoming: { label: '예측 가능', dot: 'bg-green-500', text: 'text-green-700' },
     active:   { label: '진행 중',   dot: 'bg-yellow-500', text: 'text-yellow-700' },
-    completed:{ label: '종료',      dot: 'bg-gray-400',  text: 'text-gray-400' },
+    completed:{ label: '종료',      dot: 'bg-gray-400',   text: 'text-gray-400' },
   }
   const rankIcons = ['🥇', '🥈', '🥉']
 
-  const RaceRow = ({ race, isCompleted = false }: { race: { id: string; name: string; race_date: string; status: string }; isCompleted?: boolean }) => {
+  const RaceRow = ({ race, isCompleted = false }: {
+    race: { id: string; name: string; race_date: string; status: string }
+    isCompleted?: boolean
+  }) => {
     const date = new Date(race.race_date).toLocaleDateString('ko-KR', {
       month: 'short', day: 'numeric', weekday: 'short',
     })
     const cfg = statusConfig[race.status] ?? statusConfig.upcoming
-    const flag = getRaceFlag(race.name)
-    const href = isCompleted ? `/predict/${race.id}` : `/predict/${race.id}`
+    const countryCode = getRaceCountryCode(race.name)
 
     return (
       <Link
-        href={href}
-        className={`relative flex items-center justify-between px-4 py-3.5 overflow-hidden transition-colors group
-          ${isCompleted ? 'hover:bg-gray-50' : 'hover:bg-gray-50'}`}
+        href={`/predict/${race.id}`}
+        className="relative flex items-center justify-between px-4 py-3.5 overflow-hidden transition-colors group hover:bg-gray-50/80"
       >
-        {/* 국기 오버레이 */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none select-none absolute right-2 top-1/2 -translate-y-1/2 text-[3.5rem] leading-none opacity-10"
-        >
-          {flag}
-        </span>
+        {/* 국기 이미지 오버레이 (우측에서 좌측으로 그라데이션 페이드) */}
+        {countryCode && (
+          <div className="absolute right-0 top-0 h-full w-32 pointer-events-none overflow-hidden">
+            <Image
+              src={`https://flagcdn.com/w320/${countryCode}.png`}
+              alt=""
+              fill
+              className="object-cover object-center opacity-25"
+              unoptimized
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent" />
+          </div>
+        )}
 
         <div className="relative flex items-center gap-3 min-w-0">
           <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-medium ${cfg.text}`}>
@@ -104,7 +110,6 @@ export default async function HomePage() {
               <h2 className="text-base font-bold text-gray-800">그랑프리 일정</h2>
               {upcomingRaces && <span className="text-gray-400 text-sm">{upcomingRaces.length}경기</span>}
             </div>
-
             {upcomingRaces && upcomingRaces.length > 0 ? (
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
                 {upcomingRaces.map((race) => (
@@ -144,7 +149,6 @@ export default async function HomePage() {
               전체 보기
             </Link>
           </div>
-
           {topUsers && topUsers.length > 0 ? (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
               {topUsers.map((u, i) => (

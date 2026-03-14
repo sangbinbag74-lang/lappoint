@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { getRaceFlag } from '@/lib/constants/raceFlags'
+import { getRaceCountryCode } from '@/lib/constants/raceFlags'
 
 export default async function RacesHistoryPage() {
   const supabase = await createClient()
@@ -16,7 +17,6 @@ export default async function RacesHistoryPage() {
     .select('id, race_id, question, correct_option, is_settled')
     .eq('is_settled', true)
 
-  // 경기별 정산 완료 예측 수 집계
   const settledByRace = new Map<string, number>()
   if (predictions) {
     for (const p of predictions) {
@@ -37,22 +37,28 @@ export default async function RacesHistoryPage() {
             const date = new Date(race.race_date).toLocaleDateString('ko-KR', {
               year: 'numeric', month: 'short', day: 'numeric', weekday: 'short',
             })
-            const flag = getRaceFlag(race.name)
+            const countryCode = getRaceCountryCode(race.name)
             const settledCount = settledByRace.get(race.id) ?? 0
 
             return (
               <Link
                 key={race.id}
                 href={`/predict/${race.id}`}
-                className="relative flex items-center justify-between px-4 py-4 overflow-hidden hover:bg-gray-50 transition-colors group"
+                className="relative flex items-center justify-between px-4 py-4 overflow-hidden hover:bg-gray-50/80 transition-colors group"
               >
-                {/* 국기 오버레이 */}
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none select-none absolute right-3 top-1/2 -translate-y-1/2 text-[3rem] leading-none opacity-10"
-                >
-                  {flag}
-                </span>
+                {/* 국기 이미지 오버레이 */}
+                {countryCode && (
+                  <div className="absolute right-0 top-0 h-full w-32 pointer-events-none overflow-hidden">
+                    <Image
+                      src={`https://flagcdn.com/w320/${countryCode}.png`}
+                      alt=""
+                      fill
+                      className="object-cover object-center opacity-25"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent" />
+                  </div>
+                )}
 
                 <div className="relative min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
