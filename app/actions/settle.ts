@@ -178,6 +178,25 @@ export async function autoSettlePrediction(predictionId: string): Promise<
     if (!matched) return { success: false, error: 'NO_MATCH (podium_yn)' }
   }
 
+  // ── qualifying_duel ───────────────────────────────────────
+  else if (type === 'qualifying_duel') {
+    if (options.length !== 2) return { success: false, error: 'INVALID_OPTIONS' }
+    const { data: qualResults } = await supabase
+      .from('qualifying_results')
+      .select('driver_code, driver_name, position')
+      .eq('race_id', prediction.race_id)
+      .order('position', { ascending: true })
+    if (!qualResults || qualResults.length === 0) return { success: false, error: 'NO_QUALIFYING_SYNCED' }
+    const findPos = (opt: string) => {
+      const r = qualResults.find((d) => matchDriver([opt], d.driver_code, d.driver_name))
+      return r ? r.position : 999
+    }
+    const posA = findPos(options[0])
+    const posB = findPos(options[1])
+    if (posA === 999 && posB === 999) return { success: false, error: `NO_MATCH (qualifying_duel)` }
+    matched = posA <= posB ? options[0] : options[1]
+  }
+
   if (!matched) return { success: false, error: 'NO_MATCH' }
 
   const settleResult = await settlePrediction(predictionId, matched)
