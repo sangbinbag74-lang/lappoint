@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 const JOLPICA_BASE = 'https://api.jolpi.ca/ergast/f1'
@@ -19,15 +20,16 @@ type JolpicaRace = {
 // 2026 F1 캘린더를 Jolpica API에서 가져와 races 테이블에 upsert
 export async function syncF1Calendar() {
   const supabase = await createClient()
+  const adminSupabase = createAdminClient()
 
-  // 관리자 확인
+  // 관리자 확인 (일반 클라이언트로 유저 확인)
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
     return { success: false, error: 'UNAUTHORIZED' }
   }
 
   const res = await fetch(`${JOLPICA_BASE}/${SEASON}.json`, {
-    next: { revalidate: 3600 }, // 1시간 캐시
+    next: { revalidate: 3600 },
   })
 
   if (!res.ok) {
@@ -45,14 +47,13 @@ export async function syncF1Calendar() {
 
   const upsertRows = races.map((race) => {
     const raceDateStr = race.time
-      ? `${race.date}T${race.time}` // UTC ISO 문자열
-      : `${race.date}T14:00:00Z`    // time 없으면 오후 2시 UTC 기본값
+      ? `${race.date}T${race.time}`
+      : `${race.date}T14:00:00Z`
 
     const raceDate = new Date(raceDateStr)
     const status = raceDate < now ? 'completed' : 'upcoming'
 
     return {
-      // name을 unique key로 사용 (on_conflict)
       name: race.raceName,
       round: parseInt(race.round, 10),
       race_date: raceDateStr,
@@ -60,7 +61,7 @@ export async function syncF1Calendar() {
     }
   })
 
-  const { error } = await supabase
+  const { error } = await adminSupabase
     .from('races')
     .upsert(upsertRows, { onConflict: 'name', ignoreDuplicates: false })
 
@@ -77,6 +78,7 @@ export async function syncF1Calendar() {
 // Jolpica API 결과를 race_results 테이블에 저장 (어드민 전용)
 export async function syncRaceResults(raceId: string, round: number) {
   const supabase = await createClient()
+  const adminSupabase = createAdminClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.email !== process.env.ADMIN_EMAIL) {
@@ -115,7 +117,7 @@ export async function syncRaceResults(raceId: string, round: number) {
     synced_at: new Date().toISOString(),
   }))
 
-  const { error } = await supabase
+  const { error } = await adminSupabase
     .from('race_results')
     .upsert(rows, { onConflict: 'race_id,position' })
 
