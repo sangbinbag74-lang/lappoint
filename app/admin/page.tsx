@@ -13,7 +13,7 @@ export default async function AdminPage() {
   const { data: races } = await supabase
     .from('races')
     .select('id, name, race_date, qualifying_date, sprint_date, sprint_qualifying_date, status, round, betting_locked')
-    .order('race_date', { ascending: false })
+    .order('race_date', { ascending: true })
 
   const { data: predictions } = await supabase
     .from('predictions')
@@ -113,7 +113,7 @@ export default async function AdminPage() {
           const raceDate = new Date(race.race_date).toLocaleDateString('ko-KR', {
             year: 'numeric', month: 'short', day: 'numeric',
           })
-          const defaultOpen = race.status !== 'completed'
+          const defaultOpen = false
 
           // 세션날짜 맵 (자동마감 판별용)
           const sessionDateMap: Record<string, string | null> = {
