@@ -4,6 +4,7 @@ import BettingCard from '@/components/BettingCard'
 import AttendanceButton from '@/components/AttendanceButton'
 import PredictionSection from '@/components/PredictionSection'
 import PredictionItem from '@/components/PredictionItem'
+import LiveChat from '@/components/LiveChat'
 
 interface PageProps {
   params: Promise<{ raceId: string }>
@@ -162,6 +163,14 @@ export default async function PredictPage({ params }: PageProps) {
     }
   }
 
+  // 전체 댓글 flat 목록 (라이브 채팅용) — created_at 내림차순
+  const predictionQuestionMap = new Map<string, string>()
+  for (const p of (predictions ?? [])) predictionQuestionMap.set(p.id, p.question)
+  const allComments = Array.from(commentsMap.values())
+    .flat()
+    .map((c) => ({ ...c, prediction_question: predictionQuestionMap.get(c.prediction_id) ?? '' }))
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
   // 세션별 예측 그룹핑 + 정렬
   const predsBySession = new Map<SessionType, typeof predictions>()
   if (predictions) {
@@ -208,7 +217,8 @@ export default async function PredictPage({ params }: PageProps) {
   const status = statusConfig[race.status] ?? statusConfig.upcoming
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="flex gap-4 items-start max-w-5xl mx-auto">
+    <div className="flex-1 min-w-0 space-y-6">
       {/* 경기 헤더 */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-start justify-between gap-4">
@@ -265,11 +275,6 @@ export default async function PredictPage({ params }: PageProps) {
                       isSettled={pred.is_settled}
                       hasUserBet={!!userBet}
                       defaultOpen={!!userBet}
-                      predictionId={pred.id}
-                      comments={commentsMap.get(pred.id) ?? []}
-                      userBetId={userBet?.bet_id}
-                      currentUserId={user?.id}
-                      isLoggedIn={!!user}
                     >
                       <BettingCard
                         prediction={{
@@ -305,6 +310,16 @@ export default async function PredictPage({ params }: PageProps) {
           배팅에 참여하려면 <span className="text-gray-900 font-semibold">Google 로그인</span>이 필요합니다.
         </p>
       )}
+    </div>
+
+    {/* 라이브 채팅 — 항상 우측 고정 */}
+    <div className="hidden lg:block w-72 flex-shrink-0 sticky top-16">
+      <LiveChat
+        allComments={allComments}
+        currentUserId={user?.id}
+        isLoggedIn={!!user}
+      />
+    </div>
     </div>
   )
 }
