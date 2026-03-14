@@ -54,10 +54,10 @@ export default async function HomePage() {
               src={`https://flagcdn.com/w320/${countryCode}.png`}
               alt=""
               fill
-              className="object-cover object-center opacity-25"
+              className="object-contain object-right opacity-25"
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
           </div>
         )}
 

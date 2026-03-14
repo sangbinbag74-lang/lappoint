@@ -229,7 +229,7 @@ export default async function PredictPage({ params }: PageProps) {
                       question={pred.question}
                       isSettled={pred.is_settled}
                       hasUserBet={!!userBet}
-                      defaultOpen={!isLocked || !!userBet}
+                      defaultOpen={!!userBet}
                     >
                       <BettingCard
                         prediction={{

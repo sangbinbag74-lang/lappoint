@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import SettleForm from '@/components/SettleForm'
 import SyncRacesButton from '@/components/SyncRacesButton'
@@ -90,7 +91,15 @@ export default async function AdminPage() {
               경기 결과를 확정하고 포인트를 정산합니다. 정산은 되돌릴 수 없습니다.
             </p>
           </div>
-          <SyncRacesButton completedRaces={completedRaces} allRaces={allRaces} />
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin/stats"
+              className="text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+            >
+              통계 보기 →
+            </Link>
+            <SyncRacesButton completedRaces={completedRaces} allRaces={allRaces} />
+          </div>
         </div>
       </div>
 
