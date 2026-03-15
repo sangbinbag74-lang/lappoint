@@ -101,6 +101,12 @@ export default async function AdminPage() {
             >
               통계 보기 →
             </Link>
+            <Link
+              href="/admin/users"
+              className="text-xs font-semibold text-purple-600 border border-purple-200 bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors"
+            >
+              유저 관리 →
+            </Link>
             <SyncRacesButton completedRaces={completedRaces} allRaces={allRaces} />
           </div>
         </div>
