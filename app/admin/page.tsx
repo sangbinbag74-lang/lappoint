@@ -143,36 +143,57 @@ export default async function AdminPage() {
                 <BettingLockButton raceId={race.id} locked={race.betting_locked ?? false} />
               </div>
 
-              {/* 예측 항목 목록 */}
-              {racePreds.length > 0 ? (
-                <div className="space-y-2 pl-2 border-l-2 border-gray-200">
-                  {racePreds.map((pred) => {
-                    const sessionDate = sessionDateMap[pred.session_type ?? 'race']
-                    const isAutoDeadline = !!sessionDate
-                    return (
-                      <div key={pred.id} className="space-y-1">
-                        <PredictionLockButton
-                          predictionId={pred.id}
-                          manuallyLocked={pred.manually_locked ?? false}
-                          isAutoDeadline={isAutoDeadline}
-                        />
-                        <SettleForm
-                          prediction={{
-                            id: pred.id,
-                            question: pred.question,
-                            options: pred.options as string[],
-                            is_settled: pred.is_settled,
-                            correct_option: pred.correct_option,
-                            prediction_type: pred.prediction_type ?? 'custom',
-                          }}
-                          stats={statsMap.get(pred.id) ?? { total_bets: 0, total_amount: 0 }}
-                          raceResults={raceResults ?? undefined}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
+              {/* 예측 항목 목록 — 3분류 */}
+              {racePreds.length > 0 ? (() => {
+                const qualifyingPreds = racePreds.filter(p =>
+                  p.session_type === 'qualifying' || p.session_type === 'sprint_qualifying' || p.session_type === 'sprint'
+                )
+                const autoPreds = racePreds.filter(p =>
+                  p.session_type === 'race' && p.prediction_type === 'race_winner'
+                )
+                const manualPreds = racePreds.filter(p =>
+                  !qualifyingPreds.includes(p) && !autoPreds.includes(p)
+                )
+
+                const renderGroup = (preds: typeof racePreds, label: string) => preds.length === 0 ? null : (
+                  <div key={label} className="space-y-1">
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wide px-2 py-1">{label}</p>
+                    {preds.map((pred) => {
+                      const sessionDate = sessionDateMap[pred.session_type ?? 'race']
+                      const isAutoDeadline = !!sessionDate
+                      return (
+                        <div key={pred.id} className="space-y-1">
+                          <PredictionLockButton
+                            predictionId={pred.id}
+                            manuallyLocked={pred.manually_locked ?? false}
+                            isAutoDeadline={isAutoDeadline}
+                          />
+                          <SettleForm
+                            prediction={{
+                              id: pred.id,
+                              question: pred.question,
+                              options: pred.options as string[],
+                              is_settled: pred.is_settled,
+                              correct_option: pred.correct_option,
+                              prediction_type: pred.prediction_type ?? 'custom',
+                            }}
+                            stats={statsMap.get(pred.id) ?? { total_bets: 0, total_amount: 0 }}
+                            raceResults={raceResults ?? undefined}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )
+
+                return (
+                  <div className="space-y-3 pl-2 border-l-2 border-gray-200">
+                    {renderGroup(qualifyingPreds, '퀄리파잉')}
+                    {renderGroup(autoPreds, '자동 정산')}
+                    {renderGroup(manualPreds, '수동 정산')}
+                  </div>
+                )
+              })() : (
                 <p className="text-gray-400 text-sm pl-4">등록된 예측 항목 없음</p>
               )}
               <CreatePredictionForm raceId={race.id} />

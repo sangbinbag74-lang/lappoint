@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { suspendUser, deleteUser } from '@/app/actions/adminUsers'
+import { suspendUser, deleteComment } from '@/app/actions/adminUsers'
 
 export default async function AdminUsersPage() {
   const supabase = createAdminClient()
@@ -46,6 +46,7 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-xs">예측 항목</th>
                 <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-xs">내용</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">날짜</th>
+                <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -60,15 +61,29 @@ export default async function AdminUsersPage() {
                     <td className="px-4 py-2.5 text-gray-800 font-medium text-xs">{author}</td>
                     <td className="px-4 py-2.5 text-gray-600 text-xs max-w-[120px] truncate">{raceName}</td>
                     <td className="px-4 py-2.5 text-gray-600 text-xs max-w-[160px] truncate">{question}</td>
-                    <td className="px-4 py-2.5 text-gray-800 text-xs max-w-[240px] truncate">{c.content}</td>
+                    <td className="px-4 py-2.5 text-gray-800 text-xs max-w-[200px] truncate">{c.content}</td>
                     <td className="px-4 py-2.5 text-right text-gray-400 text-xs whitespace-nowrap">
                       {new Date(c.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </td>
+                    <td className="px-4 py-2.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <form action={suspendUser.bind(null, c.user_id)}>
+                          <button type="submit" className="text-xs font-semibold text-yellow-700 border border-yellow-200 bg-yellow-50 px-2 py-1 rounded-lg hover:bg-yellow-100 transition-colors whitespace-nowrap">
+                            계정 정지
+                          </button>
+                        </form>
+                        <form action={deleteComment.bind(null, c.id)}>
+                          <button type="submit" className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 px-2 py-1 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap">
+                            댓글 삭제
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 )
               }) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">댓글이 없습니다.</td>
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">댓글이 없습니다.</td>
                 </tr>
               )}
             </tbody>
@@ -76,7 +91,7 @@ export default async function AdminUsersPage() {
         </div>
       </section>
 
-      {/* 유저 목록 */}
+      {/* 유저 목록 (조회 전용) */}
       <section>
         <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">
           전체 회원 <span className="text-gray-400 font-normal normal-case">({users?.length ?? 0}명)</span>
@@ -89,7 +104,6 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-xs">닉네임</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">포인트</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">가입일</th>
-                <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -103,30 +117,10 @@ export default async function AdminUsersPage() {
                   <td className="px-4 py-2.5 text-right text-gray-400 text-xs">
                     {new Date(u.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
                   </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <form action={suspendUser.bind(null, u.id)}>
-                        <button
-                          type="submit"
-                          className="text-xs font-semibold text-yellow-700 border border-yellow-200 bg-yellow-50 px-2.5 py-1 rounded-lg hover:bg-yellow-100 transition-colors"
-                        >
-                          정지
-                        </button>
-                      </form>
-                      <form action={deleteUser.bind(null, u.id)}>
-                        <button
-                          type="submit"
-                          className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 px-2.5 py-1 rounded-lg hover:bg-red-100 transition-colors"
-                        >
-                          삭제
-                        </button>
-                      </form>
-                    </div>
-                  </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">회원이 없습니다.</td>
+                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">회원이 없습니다.</td>
                 </tr>
               )}
             </tbody>

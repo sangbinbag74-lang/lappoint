@@ -37,3 +37,17 @@ export function getRaceCountryCode(raceName: string): string {
   }
   return ''
 }
+
+const COUNTRY_COLORS: Record<string, string> = {
+  bh: '#CE1126', sa: '#006C35', au: '#00008B', jp: '#BC002D',
+  cn: '#DE2910', us: '#B22234', it: '#009246', mc: '#CE1126',
+  ca: '#FF0000', es: '#C60B1E', at: '#ED2939', gb: '#012169',
+  hu: '#CE2939', be: '#F9BE00', nl: '#FF6600', az: '#0092BC',
+  sg: '#EF3340', mx: '#006847', br: '#009C3B', qa: '#8D1B3D',
+  ae: '#00732F',
+}
+
+export function getRaceCountryColor(raceName: string): string | null {
+  const code = getRaceCountryCode(raceName)
+  return code ? (COUNTRY_COLORS[code] ?? null) : null
+}

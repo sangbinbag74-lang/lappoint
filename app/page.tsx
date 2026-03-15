@@ -1,7 +1,6 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
-import { getRaceCountryCode } from '@/lib/constants/raceFlags'
+import { getRaceCountryCode, getRaceCountryColor } from '@/lib/constants/raceFlags'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -36,27 +35,15 @@ export default async function HomePage() {
     })
     const isLocked = race.betting_locked ?? false
     const countryCode = getRaceCountryCode(race.name)
+    const countryColor = getRaceCountryColor(race.name)
 
     return (
       <Link
         href={`/predict/${race.id}`}
-        className={`relative flex items-center justify-between px-4 py-3.5 overflow-hidden transition-colors group hover:bg-gray-50/80 ${isLocked ? 'opacity-50 grayscale' : ''}`}
+        className={`flex items-center justify-between px-4 py-3.5 transition-colors group hover:brightness-95 ${isLocked ? 'opacity-50 grayscale' : ''}`}
+        style={countryColor ? { backgroundColor: countryColor + '12' } : undefined}
       >
-        {/* 국기 이미지 오버레이 (우측에서 좌측으로 그라데이션 페이드) */}
-        {countryCode && (
-          <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
-            <Image
-              src={`https://flagcdn.com/w320/${countryCode}.png`}
-              alt=""
-              fill
-              className="object-cover object-top opacity-70"
-              unoptimized
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
-          </div>
-        )}
-
-        <div className="relative flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
           <span className="text-gray-800 font-medium text-sm truncate group-hover:text-gray-900">
             {countryCode && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -64,8 +51,8 @@ export default async function HomePage() {
             )}{race.name}
           </span>
         </div>
-        <div className="relative flex items-center gap-3 flex-shrink-0 ml-3">
-          <span className="text-gray-500 text-xs hidden sm:block bg-white/80 px-1.5 py-0.5 rounded">{date}</span>
+        <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+          <span className="text-gray-500 text-xs hidden sm:block">{date}</span>
           {!isLocked && (
             <span className={`text-xs font-semibold group-hover:underline ${isCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
               {isCompleted ? '결과 보기 →' : '예측하기 →'}

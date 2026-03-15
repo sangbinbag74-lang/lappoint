@@ -23,3 +23,10 @@ export async function deleteUser(userId: string) {
   await admin.auth.admin.deleteUser(userId)
   revalidatePath('/admin/users')
 }
+
+export async function deleteComment(commentId: string) {
+  await assertAdmin()
+  const admin = createAdminClient()
+  await admin.from('bet_comments').delete().eq('id', commentId)
+  revalidatePath('/admin/users')
+}
