@@ -31,6 +31,8 @@ const CONSTRUCTOR_NAME_COLORS: [string, string][] = [
   ['racing bulls', '#6692FF'],
   ['haas',         '#B6BABD'],
   ['sauber',       '#52E252'],
+  ['audi',         '#BB0A21'],
+  ['cadillac',     '#1B3A6B'],
   ['williams',     '#64C4FF'],
 ]
 
