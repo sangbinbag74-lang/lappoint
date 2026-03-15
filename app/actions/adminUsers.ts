@@ -9,10 +9,15 @@ async function assertAdmin() {
   if (user?.email !== process.env.ADMIN_EMAIL) throw new Error('Unauthorized')
 }
 
-export async function suspendUser(userId: string) {
+export async function suspendCommentUser(userId: string, durationDays: number, reason: string) {
   await assertAdmin()
   const admin = createAdminClient()
-  await admin.auth.admin.updateUserById(userId, { ban_duration: '876600h' })
+  const until = durationDays === -1
+    ? new Date('9999-12-31').toISOString()
+    : new Date(Date.now() + durationDays * 86400 * 1000).toISOString()
+  await admin.from('users')
+    .update({ comment_suspended_until: until, comment_suspend_reason: reason })
+    .eq('id', userId)
   revalidatePath('/admin/users')
 }
 

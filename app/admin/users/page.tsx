@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { suspendUser, deleteComment } from '@/app/actions/adminUsers'
+import { deleteComment } from '@/app/actions/adminUsers'
+import SuspendCommentUserButton from '@/components/SuspendCommentUserButton'
 
 export default async function AdminUsersPage() {
   const supabase = createAdminClient()
@@ -67,11 +68,7 @@ export default async function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <form action={suspendUser.bind(null, c.user_id)}>
-                          <button type="submit" className="text-xs font-semibold text-yellow-700 border border-yellow-200 bg-yellow-50 px-2 py-1 rounded-lg hover:bg-yellow-100 transition-colors whitespace-nowrap">
-                            계정 정지
-                          </button>
-                        </form>
+                        <SuspendCommentUserButton userId={c.user_id} />
                         <form action={deleteComment.bind(null, c.id)}>
                           <button type="submit" className="text-xs font-semibold text-red-600 border border-red-200 bg-red-50 px-2 py-1 rounded-lg hover:bg-red-100 transition-colors whitespace-nowrap">
                             댓글 삭제

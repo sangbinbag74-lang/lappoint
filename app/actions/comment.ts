@@ -28,6 +28,22 @@ export async function postBetComment(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'UNAUTHENTICATED' }
 
+  const { data: userData } = await supabase
+    .from('users')
+    .select('comment_suspended_until, comment_suspend_reason')
+    .eq('id', user.id)
+    .single()
+
+  if (userData?.comment_suspended_until) {
+    const until = new Date(userData.comment_suspended_until)
+    if (until > new Date()) {
+      const isPermanent = until.getFullYear() >= 9999
+      const period = isPermanent ? '영구 정지' : `${until.toLocaleDateString('ko-KR')}까지 정지`
+      const reasonStr = userData.comment_suspend_reason ? ` · 사유: ${userData.comment_suspend_reason}` : ''
+      return { success: false, error: `댓글 작성이 제한되어 있습니다. (${period}${reasonStr})` }
+    }
+  }
+
   const { error } = await supabase
     .from('bet_comments')
     .insert({
