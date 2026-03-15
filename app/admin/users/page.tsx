@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { deleteComment } from '@/app/actions/adminUsers'
 import SuspendCommentUserButton from '@/components/SuspendCommentUserButton'
+import UnsuspendButton from '@/components/UnsuspendButton'
 
 export default async function AdminUsersPage() {
   const supabase = createAdminClient()
@@ -12,7 +13,7 @@ export default async function AdminUsersPage() {
   ] = await Promise.all([
     supabase
       .from('users')
-      .select('id, nickname, point_balance, created_at')
+      .select('id, nickname, point_balance, created_at, comment_suspended_until, comment_suspend_reason')
       .order('point_balance', { ascending: false }),
     supabase
       .from('bet_comments')
@@ -101,10 +102,18 @@ export default async function AdminUsersPage() {
                 <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-xs">닉네임</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">포인트</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">가입일</th>
+                <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">상태</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {users && users.length > 0 ? users.map((u, i) => (
+              {users && users.length > 0 ? users.map((u, i) => {
+                const isSuspended = u.comment_suspended_until
+                  ? new Date(u.comment_suspended_until) > new Date()
+                  : false
+                const isPermanent = u.comment_suspended_until
+                  ? new Date(u.comment_suspended_until).getFullYear() >= 9999
+                  : false
+                return (
                 <tr key={u.id} className="hover:bg-gray-50">
                   <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
                   <td className="px-4 py-2.5 text-gray-800 font-medium text-sm">{u.nickname}</td>
@@ -114,10 +123,23 @@ export default async function AdminUsersPage() {
                   <td className="px-4 py-2.5 text-right text-gray-400 text-xs">
                     {new Date(u.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
                   </td>
+                  <td className="px-4 py-2.5 text-right">
+                    {isSuspended ? (
+                      <div className="flex items-center justify-end gap-1.5">
+                        <span className="text-xs text-red-500 font-medium">
+                          {isPermanent ? '영구정지' : `~${new Date(u.comment_suspended_until!).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}`}
+                        </span>
+                        <UnsuspendButton userId={u.id} />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-300">-</span>
+                    )}
+                  </td>
                 </tr>
-              )) : (
+                )
+              }) : (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400 text-sm">회원이 없습니다.</td>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">회원이 없습니다.</td>
                 </tr>
               )}
             </tbody>

@@ -29,6 +29,7 @@ const CONSTRUCTOR_NAME_COLORS: [string, string][] = [
   ['aston martin', '#358C75'],
   ['alpine',       '#FF87BC'],
   ['racing bulls', '#6692FF'],
+  ['rb',           '#6692FF'],
   ['haas',         '#B6BABD'],
   ['sauber',       '#52E252'],
   ['audi',         '#BB0A21'],

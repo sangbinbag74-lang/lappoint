@@ -21,6 +21,16 @@ export async function suspendCommentUser(userId: string, durationDays: number, r
   revalidatePath('/admin/users')
 }
 
+export async function unsuspendCommentUser(userId: string) {
+  await assertAdmin()
+  const admin = createAdminClient()
+  await admin.from('users')
+    .update({ comment_suspended_until: null, comment_suspend_reason: null })
+    .eq('id', userId)
+  await admin.auth.admin.updateUserById(userId, { ban_duration: 'none' })
+  revalidatePath('/admin/users')
+}
+
 export async function deleteUser(userId: string) {
   await assertAdmin()
   const admin = createAdminClient()
