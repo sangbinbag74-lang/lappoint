@@ -8,7 +8,7 @@ export const DRIVER_NAMES_KO: Record<string, string> = {
   TSU: '츠노다',     HAD: '해드자르',
   HUL: '휠켄베르그', OCO: '오콘',
   BOT: '보타스',     ZHO: '저우',
-  ALB: '알봉',       SAI: '사인츠',
+  ALB: '알본',       SAI: '사인츠',
   BEA: '베어만',     BOR: '보르톨레토',
   COL: '콜라핀토',   LIN: '린드블라드',
   PER: '페레즈',

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import BettingCard from '@/components/BettingCard'
 import AttendanceButton from '@/components/AttendanceButton'
 import PredictionSection from '@/components/PredictionSection'
@@ -83,7 +84,7 @@ export default async function PredictPage({ params }: PageProps) {
       ? supabase.from('bets').select('id, prediction_id, selected_option, bet_amount').eq('user_id', user.id).in('prediction_id', predictionIds)
       : Promise.resolve({ data: null }),
     predictionIds.length > 0
-      ? supabase.from('bets').select('prediction_id, selected_option, bet_amount').in('prediction_id', predictionIds)
+      ? createAdminClient().from('bets').select('prediction_id, selected_option, bet_amount').in('prediction_id', predictionIds)
       : Promise.resolve({ data: null }),
     predictionIds.length > 0
       ? supabase.from('bet_comments').select('id, content, created_at, prediction_id, bet_id, user_id, users(nickname, avatar_url), bets(selected_option, bet_amount)').in('prediction_id', predictionIds).order('created_at', { ascending: false }).limit(100)
