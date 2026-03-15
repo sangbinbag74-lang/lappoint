@@ -185,18 +185,25 @@ export default function BettingCard({
             const isUserPick = userBet?.selected_option === opt
             const color = getDriverColor(opt) ?? getConstructorColor(opt)
             const koName = getDriverNameKo(opt)
+            const stat = betStats[opt]
+            const pct = totalBetAmount > 0 && stat ? Math.round((stat.total / totalBetAmount) * 100) : null
             return (
-              <div key={opt} className={`flex items-center gap-0 rounded-lg border overflow-hidden
+              <div key={opt} className={`relative flex items-center gap-0 rounded-lg border overflow-hidden
                 ${isCorrect ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 opacity-60'}`}>
-                <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? (isCorrect ? '#22c55e' : '#e5e7eb') }} />
-                <div className="flex items-center justify-between flex-1 px-3 py-2">
+                {pct !== null && (
+                  <div className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                    style={{ width: `${pct}%`, backgroundColor: color ?? (isCorrect ? '#22c55e' : '#6b7280'), opacity: 0.13 }} />
+                )}
+                <span className="w-1 self-stretch flex-shrink-0 relative z-10" style={{ backgroundColor: color ?? (isCorrect ? '#22c55e' : '#e5e7eb') }} />
+                <div className="flex items-center justify-between flex-1 px-3 py-2 relative z-10">
                   <span className={`text-sm font-semibold ${isCorrect ? 'text-green-700' : 'text-gray-500'}`}>
                     {isCorrect && '✓ '}{opt}
                     {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
                   </span>
                   <div className="flex items-center gap-2">
                     {isUserPick && <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">내 선택</span>}
-                    {betStats[opt] && <span className="text-gray-400 text-xs tabular-nums">{betStats[opt].total.toLocaleString()}P</span>}
+                    {pct !== null && <span className="text-gray-500 text-xs font-bold tabular-nums">{pct}%</span>}
+                    {stat && <span className="text-gray-400 text-xs tabular-nums">{stat.total.toLocaleString()}P</span>}
                   </div>
                 </div>
               </div>
@@ -229,19 +236,26 @@ export default function BettingCard({
             const koName = getDriverNameKo(opt)
             const stat = betStats[opt]
             const pct = totalBetAmount > 0 && stat ? Math.round((stat.total / totalBetAmount) * 100) : null
+            const showStats = !!userBet
             return (
-              <div key={opt} className={`flex items-center gap-0 rounded-lg border overflow-hidden
+              <div key={opt} className={`relative flex items-center gap-0 rounded-lg border overflow-hidden
                 ${isUserPick ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
-                <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? '#e5e7eb' }} />
-                <div className="flex items-center justify-between flex-1 px-3 py-2">
+                {showStats && pct !== null && (
+                  <div className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                    style={{ width: `${pct}%`, backgroundColor: color ?? '#6b7280', opacity: 0.13 }} />
+                )}
+                <span className="w-1 self-stretch flex-shrink-0 relative z-10" style={{ backgroundColor: color ?? '#e5e7eb' }} />
+                <div className="flex items-center justify-between flex-1 px-3 py-2 relative z-10">
                   <span className={`text-sm font-semibold ${isUserPick ? 'text-blue-700' : 'text-gray-600'}`}>
                     {isUserPick && '✓ '}{opt}
                     {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
                   </span>
-                  <div className="flex items-center gap-2 text-xs text-gray-400 tabular-nums">
-                    {pct !== null && <span>{pct}%</span>}
-                    {stat && <span>{stat.total.toLocaleString()}P</span>}
-                  </div>
+                  {showStats && (pct !== null || stat) && (
+                    <div className="flex items-center gap-2 text-xs tabular-nums">
+                      {pct !== null && <span className="text-gray-600 font-bold">{pct}%</span>}
+                      {stat && <span className="text-gray-400">{stat.total.toLocaleString()}P</span>}
+                    </div>
+                  )}
                 </div>
               </div>
             )
@@ -278,25 +292,30 @@ export default function BettingCard({
           const koName = getDriverNameKo(opt)
           const stat = betStats[opt]
           const pct = totalBetAmount > 0 && stat ? Math.round((stat.total / totalBetAmount) * 100) : null
+          const showStats = !!successMsg
           return (
             <button
               key={opt}
               onClick={() => { setSelectedOption(opt); setError(null); setSuccessMsg(null) }}
               disabled={isPending || !!successMsg}
-              className={`flex items-center gap-0 rounded-lg border overflow-hidden text-left transition-all
+              className={`relative flex items-center gap-0 rounded-lg border overflow-hidden text-left transition-all
                 ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'}
                 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <span className="w-1 self-stretch flex-shrink-0" style={{ backgroundColor: color ?? (isSelected ? '#3b82f6' : '#e5e7eb') }} />
-              <div className="flex items-center justify-between flex-1 px-3 py-2.5">
+              {showStats && pct !== null && (
+                <div className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                  style={{ width: `${pct}%`, backgroundColor: color ?? '#6b7280', opacity: 0.13 }} />
+              )}
+              <span className="w-1 self-stretch flex-shrink-0 relative z-10" style={{ backgroundColor: color ?? (isSelected ? '#3b82f6' : '#e5e7eb') }} />
+              <div className="flex items-center justify-between flex-1 px-3 py-2.5 relative z-10">
                 <span className={`text-sm font-semibold ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
                   {isSelected && '✓ '}{opt}
                   {koName && <span className="text-xs font-normal text-gray-400 ml-1">/ {koName}</span>}
                 </span>
-                {(pct !== null || stat) && (
-                  <div className="flex items-center gap-2 text-xs text-gray-400 tabular-nums">
-                    {pct !== null && <span>{pct}%</span>}
-                    {stat && <span>{stat.total.toLocaleString()}P</span>}
+                {showStats && (pct !== null || stat) && (
+                  <div className="flex items-center gap-2 text-xs tabular-nums">
+                    {pct !== null && <span className="text-gray-600 font-bold">{pct}%</span>}
+                    {stat && <span className="text-gray-400">{stat.total.toLocaleString()}P</span>}
                   </div>
                 )}
               </div>
