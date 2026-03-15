@@ -215,9 +215,6 @@ export default function BettingCard({
   if (prediction.is_settled && prediction.correct_option) {
     return (
       <div className="space-y-3">
-        {totalVoters > 0 && (
-          <p className="text-gray-400 text-xs">{totalVoters}명 투표</p>
-        )}
         <div className="flex flex-col gap-1.5">
           {prediction.options.map((opt) => {
             const isCorrect = opt === prediction.correct_option
@@ -266,12 +263,7 @@ export default function BettingCard({
     const canIncrease = !isLocked && !!userBet && !prediction.is_settled && !!userBetId
     return (
       <div className="space-y-3">
-        {(totalVoters > 0 || (deadline && !isLocked)) && (
-          <div className="flex items-center gap-2">
-            {totalVoters > 0 && <span className="text-gray-400 text-xs">{totalVoters}명 투표</span>}
-            {deadline && !isLocked && <TimeLeft deadline={deadline} />}
-          </div>
-        )}
+        {deadline && !isLocked && <TimeLeft deadline={deadline} />}
         <div className="flex flex-col gap-1.5">
           {prediction.options.map((opt) => {
             const isUserPick = userBet?.selected_option === opt
@@ -376,12 +368,7 @@ export default function BettingCard({
   // ── 배팅 가능 ────────────────────────────────────────────
   return (
     <div className={`space-y-3 transition-all ${shake ? 'animate-shake' : ''}`}>
-      {(totalVoters > 0 || deadline) && (
-        <div className="flex items-center gap-2">
-          {totalVoters > 0 && <span className="text-gray-400 text-xs">{totalVoters}명 투표</span>}
-          {deadline && <TimeLeft deadline={deadline} />}
-        </div>
-      )}
+      {deadline && <TimeLeft deadline={deadline} />}
 
       <div className="flex flex-col gap-1.5">
         {prediction.options.map((opt) => {

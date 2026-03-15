@@ -6,6 +6,7 @@ interface PredictionItemProps {
   question: string
   isSettled: boolean
   hasUserBet: boolean
+  voterCount?: number
   defaultOpen?: boolean
   children: React.ReactNode
 }
@@ -14,6 +15,7 @@ export default function PredictionItem({
   question,
   isSettled,
   hasUserBet,
+  voterCount,
   defaultOpen = true,
   children,
 }: PredictionItemProps) {
@@ -28,6 +30,9 @@ export default function PredictionItem({
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-gray-400 text-xs w-3 flex-shrink-0">{open ? '▼' : '▶'}</span>
           <span className="text-gray-800 font-semibold text-sm truncate">{question}</span>
+          {voterCount != null && voterCount > 0 && (
+            <span className="flex-shrink-0 text-gray-400 text-xs">{voterCount}명 투표</span>
+          )}
           {isSettled && (
             <span className="flex-shrink-0 text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full">
               정산

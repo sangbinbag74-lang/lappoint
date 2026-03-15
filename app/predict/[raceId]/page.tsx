@@ -265,12 +265,15 @@ export default async function PredictPage({ params }: PageProps) {
               >
                 {sessionPreds.map((pred) => {
                   const userBet = userBetMap.get(pred.id)
+                  const predBetStats = betStatsMap.get(pred.id) ?? {}
+                  const voterCount = Object.values(predBetStats).reduce((s, v) => s + v.count, 0)
                   return (
                     <PredictionItem
                       key={pred.id}
                       question={pred.question}
                       isSettled={pred.is_settled}
                       hasUserBet={!!userBet}
+                      voterCount={voterCount}
                       defaultOpen={!!userBet}
                     >
                       <BettingCard
