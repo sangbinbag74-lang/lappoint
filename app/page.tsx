@@ -52,7 +52,7 @@ export default async function HomePage() {
               className="object-cover object-top opacity-70"
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, transparent 0%, transparent 80%, white 100%)' }} />
           </div>
         )}
 
