@@ -214,7 +214,7 @@ export default async function PredictPage({ params }: PageProps) {
     : (statusConfig[race.status] ?? statusConfig.upcoming)
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 items-start max-w-5xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-4 lg:items-start max-w-5xl mx-auto">
     <div className="flex-1 min-w-0 space-y-6">
       {/* 경기 헤더 */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
