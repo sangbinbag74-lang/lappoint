@@ -21,8 +21,8 @@ export default async function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         {/* 로고 */}
         <Link href="/" className="flex items-center gap-0">
-          <span className="text-[#FF2800] font-black text-lg tracking-tight">LAP</span>
-          <span className="text-gray-900 font-black text-lg tracking-tight">POINT</span>
+          <span className="text-[#FF2800] font-black text-lg tracking-tight">Lap</span>
+          <span className="text-gray-900 font-black text-lg tracking-tight">Point</span>
         </Link>
 
         {/* 네비게이션 */}
