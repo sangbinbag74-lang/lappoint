@@ -44,7 +44,7 @@ export default async function HomePage() {
       >
         {/* 국기 이미지 오버레이 (우측에서 좌측으로 그라데이션 페이드) */}
         {countryCode && (
-          <div className="absolute right-0 top-0 h-full w-1/2 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <Image
               src={`https://flagcdn.com/w320/${countryCode}.png`}
               alt=""
@@ -52,7 +52,7 @@ export default async function HomePage() {
               className="object-cover object-top opacity-70"
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white to-transparent" />
           </div>
         )}
 
