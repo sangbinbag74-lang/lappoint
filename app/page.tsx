@@ -14,18 +14,43 @@ type DriverStanding = {
 export default async function HomePage() {
   const supabase = await createClient()
 
-  const { data: upcomingRaces } = await supabase
+  const { data: upcomingRacesRaw } = await supabase
     .from('races')
-    .select('id, name, race_date, status, betting_locked')
+    .select('id, name, race_date, status, betting_locked, predictions(id, is_settled)')
     .in('status', ['upcoming', 'active'])
     .order('race_date', { ascending: true })
 
-  const { data: recentCompleted } = await supabase
+  const { data: statusCompleted } = await supabase
     .from('races')
     .select('id, name, race_date, status')
     .eq('status', 'completed')
     .order('race_date', { ascending: false })
-    .limit(1)
+    .limit(5)
+
+  // 지난 경기 중 정산 완료된 경기 분리
+  const now = new Date()
+  type RaceRow = { id: string; name: string; race_date: string; status: string; betting_locked?: boolean }
+  const scheduleRaces: RaceRow[] = []
+  const settledPastRaces: RaceRow[] = []
+
+  for (const race of (upcomingRacesRaw ?? [])) {
+    const isPast = new Date(race.race_date) < now
+    const preds = race.predictions as { id: string; is_settled: boolean }[] | null
+    const allSettled = !preds || preds.length === 0 || preds.every(p => p.is_settled)
+    if (isPast && allSettled) {
+      settledPastRaces.push({ id: race.id, name: race.name, race_date: race.race_date, status: race.status })
+    } else {
+      scheduleRaces.push(race)
+    }
+  }
+
+  // 이전 경기 = status=completed + 정산 완료된 지난 경기, race_date 내림차순
+  const completedMap = new Map<string, RaceRow>()
+  for (const r of [...(statusCompleted ?? []), ...settledPastRaces]) {
+    if (!completedMap.has(r.id)) completedMap.set(r.id, r)
+  }
+  const completedRaces = Array.from(completedMap.values())
+    .sort((a, b) => new Date(b.race_date).getTime() - new Date(a.race_date).getTime())
 
   const { data: topUsers } = await supabase
     .from('users')
@@ -109,11 +134,11 @@ export default async function HomePage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-gray-800">그랑프리 일정</h2>
-              {upcomingRaces && <span className="text-gray-400 text-sm">{upcomingRaces.length}경기</span>}
+              {scheduleRaces.length > 0 && <span className="text-gray-400 text-sm">{scheduleRaces.length}경기</span>}
             </div>
-            {upcomingRaces && upcomingRaces.length > 0 ? (
+            {scheduleRaces.length > 0 ? (
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
-                {upcomingRaces.map((race) => (
+                {scheduleRaces.map((race) => (
                   <RaceRow key={race.id} race={race} />
                 ))}
               </div>
@@ -124,17 +149,17 @@ export default async function HomePage() {
             )}
           </div>
 
-          {/* 직전 완료 경기 */}
-          {recentCompleted && recentCompleted.length > 0 && (
+          {/* 이전 경기 (status=completed + 정산 완료된 지난 경기) */}
+          {completedRaces.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-bold text-gray-800">직전 경기</h2>
+                <h2 className="text-base font-bold text-gray-800">이전 경기</h2>
                 <Link href="/races" className="text-blue-600 text-sm hover:underline">
-                  이전 경기 전체 보기 →
+                  전체 보기 →
                 </Link>
               </div>
               <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
-                {recentCompleted.map((race) => (
+                {completedRaces.map((race) => (
                   <RaceRow key={race.id} race={race} isCompleted />
                 ))}
               </div>
