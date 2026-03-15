@@ -68,7 +68,7 @@ export default async function AdminPage() {
     .map((r) => ({ id: r.id, name: r.name, round: r.round! }))
 
   const statusLabel: Record<string, string> = {
-    upcoming: '배팅 가능',
+    upcoming: '참여 가능',
     active: '진행 중',
     completed: '종료',
   }
@@ -105,7 +105,7 @@ export default async function AdminPage() {
               href="/admin/bets"
               className="text-xs font-semibold text-orange-600 border border-orange-200 bg-orange-50 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors"
             >
-              배팅 현황 →
+              참여 현황 →
             </Link>
             <Link
               href="/admin/users"

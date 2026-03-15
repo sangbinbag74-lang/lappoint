@@ -148,8 +148,8 @@ export default async function AdminStatsPage() {
         <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">전체 현황</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {statCard('총 회원', totalUsers ?? 0, '명')}
-          {statCard('총 배팅', totalBets ?? 0, '건')}
-          {statCard('총 배팅 포인트', totalBetAmount, 'P')}
+          {statCard('총 참여', totalBets ?? 0, '건')}
+          {statCard('총 참여 포인트', totalBetAmount, 'P')}
           {statCard('총 댓글', totalComments ?? 0, '개')}
         </div>
       </section>
@@ -159,8 +159,8 @@ export default async function AdminStatsPage() {
         <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">오늘 현황</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {statCard('신규 가입', todayUsers ?? 0, '명')}
-          {statCard('오늘 배팅', todayBets ?? 0, '건')}
-          {statCard('오늘 배팅 포인트', todayBetAmount, 'P')}
+          {statCard('오늘 참여', todayBets ?? 0, '건')}
+          {statCard('오늘 참여 포인트', todayBetAmount, 'P')}
           {statCard('오늘 댓글', todayComments ?? 0, '개')}
         </div>
       </section>
@@ -203,7 +203,7 @@ export default async function AdminStatsPage() {
 
         {/* 배팅 많이 한 유저 TOP 10 */}
         <section>
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">배팅 횟수 TOP 10</h2>
+          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">참여 횟수 TOP 10</h2>
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
             {topBettors.map((u, i) => (
               <div key={i} className="flex items-center justify-between px-4 py-2.5">
@@ -250,7 +250,7 @@ export default async function AdminStatsPage() {
                 <th className="text-left px-4 py-2.5 text-gray-500 font-medium text-xs">경기</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">예측수</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">정산</th>
-                <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">배팅수</th>
+                <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">참여수</th>
                 <th className="text-right px-4 py-2.5 text-gray-500 font-medium text-xs">상태</th>
               </tr>
             </thead>

@@ -204,13 +204,13 @@ export default async function PredictPage({ params }: PageProps) {
   })
 
   const statusConfig: Record<string, { label: string; className: string }> = {
-    upcoming: { label: '배팅 가능', className: 'text-green-700 bg-green-50 border-green-200' },
+    upcoming: { label: '참여 가능', className: 'text-green-700 bg-green-50 border-green-200' },
     active:   { label: '진행 중',   className: 'text-yellow-700 bg-yellow-50 border-yellow-200' },
     completed:{ label: '종료',      className: 'text-gray-500 bg-gray-100 border-gray-200' },
   }
   const raceBettingLocked = (race as typeof race & { betting_locked?: boolean }).betting_locked ?? false
   const status = raceBettingLocked
-    ? { label: '배팅 금지', className: 'text-red-700 bg-red-50 border-red-200' }
+    ? { label: '잠금', className: 'text-red-700 bg-red-50 border-red-200' }
     : (statusConfig[race.status] ?? statusConfig.upcoming)
 
   return (
@@ -307,7 +307,7 @@ export default async function PredictPage({ params }: PageProps) {
 
       {!user && (
         <p className="text-center text-gray-500 text-sm py-4">
-          배팅에 참여하려면 <span className="text-gray-900 font-semibold">Google 로그인</span>이 필요합니다.
+          예측에 참여하려면 <span className="text-gray-900 font-semibold">Google 로그인</span>이 필요합니다.
         </p>
       )}
     </div>

@@ -40,7 +40,7 @@ export default function PredictionItem({
           )}
           {hasUserBet && !isSettled && (
             <span className="flex-shrink-0 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">
-              배팅완료
+              참여완료
             </span>
           )}
         </div>

@@ -27,7 +27,7 @@ export default function BettingLockButton({ raceId, locked }: BettingLockButtonP
           : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'
         }`}
     >
-      {isPending ? '...' : locked ? '🔒 배팅 금지 중 (해제)' : '배팅 금지'}
+      {isPending ? '...' : locked ? '🔒 잠금 중 (해제)' : '잠금'}
     </button>
   )
 }

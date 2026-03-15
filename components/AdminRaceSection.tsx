@@ -39,7 +39,7 @@ export default function AdminRaceSection({
       >
         {race.betting_locked && (
           <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded flex-shrink-0">
-            배팅 금지
+            잠금
           </span>
         )}
         <span className="text-sm font-bold text-gray-900 truncate flex-1">

@@ -45,7 +45,7 @@ export default function PredictionSection({
           )}
           {isLocked && (
             <span className="bg-red-50 border border-red-200 text-red-600 text-xs font-bold px-2 py-0.5 rounded-full">
-              배팅 마감
+              마감
             </span>
           )}
         </div>

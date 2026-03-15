@@ -179,7 +179,7 @@ export default async function MyPage() {
         <div className="mt-5 pt-5 border-t border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
           <div>
             <p className="text-2xl font-black text-gray-900">{totalBets}</p>
-            <p className="text-gray-400 text-xs mt-0.5">총 배팅</p>
+            <p className="text-gray-400 text-xs mt-0.5">총 참여</p>
           </div>
           <div>
             <p className="text-2xl font-black text-green-600">{winCount}</p>
@@ -200,7 +200,7 @@ export default async function MyPage() {
 
       {/* 배팅 내역 */}
       <section>
-        <h2 className="text-base font-bold text-gray-900 mb-3">최근 배팅 내역</h2>
+        <h2 className="text-base font-bold text-gray-900 mb-3">최근 참여 내역</h2>
 
         {bets && bets.length > 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm divide-y divide-gray-100">
@@ -248,7 +248,7 @@ export default async function MyPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span>{bet.bet_amount.toLocaleString()}P 배팅</span>
+                      <span>{bet.bet_amount.toLocaleString()}P 참여</span>
                       {payout !== null && (
                         <>
                           <span className="text-gray-300">·</span>
@@ -265,7 +265,7 @@ export default async function MyPage() {
           </div>
         ) : (
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-10 text-center text-gray-400">
-            아직 배팅 내역이 없습니다.
+            아직 참여 내역이 없습니다.
           </div>
         )}
       </section>

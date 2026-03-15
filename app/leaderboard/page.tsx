@@ -120,7 +120,7 @@ export default async function LeaderboardPage({
             </div>
           </div>
           <p className="text-gray-400 text-xs px-4 pt-2 pb-1">
-            * 최소 5회 배팅 참여자만 집계됩니다.
+            * 최소 5회 참여자만 집계됩니다.
           </p>
           <div className="divide-y divide-gray-100">
             {hitrateRanking && hitrateRanking.length > 0 ? (

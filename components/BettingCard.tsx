@@ -28,15 +28,15 @@ interface BettingCardProps {
 
 const ERROR_MESSAGES: Record<string, string> = {
   INSUFFICIENT_BALANCE: '보유 포인트가 부족합니다.',
-  MIN_BET: '최소 배팅 금액은 10P입니다.',
+  MIN_BET: '최소 참여 포인트는 10P입니다.',
   UNAUTHENTICATED: '로그인이 필요합니다.',
   USER_NOT_FOUND: '유저 정보를 찾을 수 없습니다.',
   NO_OPTION: '선택지를 먼저 골라주세요.',
-  BETTING_LOCKED: '배팅이 마감되었습니다.',
+  BETTING_LOCKED: '참여가 마감되었습니다.',
   ALREADY_SETTLED: '이미 정산된 예측입니다.',
   PROFANITY: '비속어가 포함된 댓글은 작성할 수 없습니다.',
-  AMOUNT_MUST_INCREASE: '현재 배팅 금액보다 높게 입력해주세요.',
-  BET_NOT_FOUND: '배팅 정보를 찾을 수 없습니다.',
+  AMOUNT_MUST_INCREASE: '현재 참여 포인트보다 높게 입력해주세요.',
+  BET_NOT_FOUND: '참여 정보를 찾을 수 없습니다.',
 }
 
 function formatTimeLeft(deadline: string): string | null {
@@ -160,7 +160,7 @@ export default function BettingCard({
         triggerShake(ERROR_MESSAGES[result.error] ?? result.error)
         return
       }
-      setSuccessMsg(`배팅 완료! 잔액: ${result.new_balance.toLocaleString()} P`)
+      setSuccessMsg(`참여 완료! 잔액: ${result.new_balance.toLocaleString()} P`)
       if ('bet_id' in result) setNewBetId((result as { bet_id?: string }).bet_id ?? null)
       setBetAmountStr('')
       router.refresh()
@@ -250,7 +250,7 @@ export default function BettingCard({
         {userBet && (
           <p className={`text-xs font-semibold ${userBet.selected_option === prediction.correct_option ? 'text-green-600' : 'text-red-500'}`}>
             {userBet.selected_option === prediction.correct_option
-              ? `적중! ${userBet.bet_amount.toLocaleString()}P 배팅`
+              ? `적중! ${userBet.bet_amount.toLocaleString()}P 참여`
               : `실패. 정답: ${prediction.correct_option}`}
           </p>
         )}
@@ -298,8 +298,8 @@ export default function BettingCard({
           })}
         </div>
 
-        {userBet && <p className="text-xs text-gray-500">{userBet.bet_amount.toLocaleString()}P 배팅 완료 — 결과 대기 중</p>}
-        {isLocked && !userBet && <p className="text-xs text-orange-500 font-medium">세션이 시작되어 배팅이 마감되었습니다.</p>}
+        {userBet && <p className="text-xs text-gray-500">{userBet.bet_amount.toLocaleString()}P 참여 완료 — 결과 대기 중</p>}
+        {isLocked && !userBet && <p className="text-xs text-orange-500 font-medium">세션이 시작되어 참여가 마감되었습니다.</p>}
 
         {/* 금액 올리기 */}
         {canIncrease && (
@@ -314,7 +314,7 @@ export default function BettingCard({
             ) : (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
                 <p className="text-xs text-blue-700 font-medium">
-                  현재 {userBet!.bet_amount.toLocaleString()}P → 새 금액 입력 (최소 {(userBet!.bet_amount + 10).toLocaleString()}P)
+                  현재 {userBet!.bet_amount.toLocaleString()}P → 새 참여 포인트 입력 (최소 {(userBet!.bet_amount + 10).toLocaleString()}P)
                 </p>
                 {increaseError && <p className="text-red-500 text-xs">{increaseError}</p>}
                 <div className="flex gap-2">
@@ -418,7 +418,7 @@ export default function BettingCard({
           value={betAmountStr}
           onChange={(e) => { setBetAmountStr(e.target.value); setError(null); setSuccessMsg(null) }}
           disabled={isPending || !!successMsg}
-          placeholder="배팅 포인트 입력 (최소 10P)"
+          placeholder="참여 포인트 입력 (최소 10P)"
           className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-gray-900 text-sm
             placeholder-gray-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -428,7 +428,7 @@ export default function BettingCard({
           보유 <span className="text-gray-700 font-semibold">{userBalance.toLocaleString()} P</span>
         </span>
       </div>
-      <p className="text-gray-400 text-xs">* 정산 시 총 배팅액의 10%가 수수료로 차감됩니다.</p>
+      <p className="text-gray-400 text-xs">* 정산 시 총 참여 포인트의 10%가 시스템 차감됩니다.</p>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -458,7 +458,7 @@ export default function BettingCard({
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed
             text-white font-bold py-2.5 rounded-lg text-sm transition-colors"
         >
-          {isPending ? '처리 중...' : '배팅하기'}
+          {isPending ? '처리 중...' : '참여하기'}
         </button>
       )}
     </div>

@@ -79,7 +79,7 @@ export default function SettleForm({ prediction, stats, raceResults }: SettleFor
       return
     }
     const confirmed = window.confirm(
-      `⚠️ 정산 확인\n\n예측: "${prediction.question}"\n정답: "${option}"\n\n총 배팅 풀: ${stats.total_amount.toLocaleString()}P (참여 ${stats.total_bets}명)\n\n정말로 정산하시겠습니까? 되돌릴 수 없습니다.`
+      `⚠️ 정산 확인\n\n예측: "${prediction.question}"\n정답: "${option}"\n\n총 참여 풀: ${stats.total_amount.toLocaleString()}P (참여 ${stats.total_bets}명)\n\n정말로 정산하시겠습니까? 되돌릴 수 없습니다.`
     )
     if (!confirmed) return
 
