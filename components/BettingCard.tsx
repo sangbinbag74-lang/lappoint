@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { placeBet } from '@/app/actions/bet'
+import { placeBet, increaseBet } from '@/app/actions/bet'
 import { postBetComment } from '@/app/actions/comment'
 import { getDriverColor, getConstructorColor } from '@/lib/constants/teamColors'
 import { getDriverNameKo } from '@/lib/constants/driverNames'
@@ -35,6 +35,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   BETTING_LOCKED: '배팅이 마감되었습니다.',
   ALREADY_SETTLED: '이미 정산된 예측입니다.',
   PROFANITY: '비속어가 포함된 댓글은 작성할 수 없습니다.',
+  AMOUNT_MUST_INCREASE: '현재 배팅 금액보다 높게 입력해주세요.',
+  BET_NOT_FOUND: '배팅 정보를 찾을 수 없습니다.',
 }
 
 function formatTimeLeft(deadline: string): string | null {
@@ -116,6 +118,7 @@ export default function BettingCard({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isCommentPending, startCommentTransition] = useTransition()
+  const [isIncreasePending, startIncreasePending] = useTransition()
 
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [betAmountStr, setBetAmountStr] = useState('')
@@ -127,10 +130,16 @@ export default function BettingCard({
   const [commentDone, setCommentDone] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
 
+  // 금액 올리기 상태
+  const [showIncrease, setShowIncrease] = useState(false)
+  const [increaseAmountStr, setIncreaseAmountStr] = useState('')
+  const [increaseError, setIncreaseError] = useState<string | null>(null)
+
   const betAmount = parseInt(betAmountStr, 10)
   const isValidAmount = !isNaN(betAmount) && betAmount >= 10
 
   const totalBetAmount = Object.values(betStats).reduce((s, v) => s + v.total, 0)
+  const totalVoters = Object.values(betStats).reduce((s, v) => s + v.count, 0)
 
   const triggerShake = (msg: string) => {
     setError(msg)
@@ -174,11 +183,44 @@ export default function BettingCard({
     })
   }
 
+  const handleIncrease = () => {
+    const newAmount = parseInt(increaseAmountStr, 10)
+    if (isNaN(newAmount) || newAmount < 10) {
+      setIncreaseError(ERROR_MESSAGES.MIN_BET)
+      return
+    }
+    if (newAmount <= (userBet?.bet_amount ?? 0)) {
+      setIncreaseError(ERROR_MESSAGES.AMOUNT_MUST_INCREASE)
+      return
+    }
+    const diff = newAmount - (userBet?.bet_amount ?? 0)
+    if (diff > userBalance) {
+      setIncreaseError(ERROR_MESSAGES.INSUFFICIENT_BALANCE)
+      return
+    }
+    setIncreaseError(null)
+    startIncreasePending(async () => {
+      const result = await increaseBet(userBetId!, newAmount)
+      if (!result.success) {
+        setIncreaseError(ERROR_MESSAGES[result.error] ?? result.error)
+        return
+      }
+      setShowIncrease(false)
+      setIncreaseAmountStr('')
+      router.refresh()
+    })
+  }
+
   // ── 정산 완료 ────────────────────────────────────────────
   if (prediction.is_settled && prediction.correct_option) {
     return (
       <div className="space-y-3">
-        <h3 className="text-gray-900 font-bold text-sm leading-snug">{prediction.question}</h3>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-gray-900 font-bold text-sm leading-snug">{prediction.question}</h3>
+          {totalVoters > 0 && (
+            <span className="text-gray-400 text-xs whitespace-nowrap flex-shrink-0">{totalVoters}명 투표</span>
+          )}
+        </div>
         <div className="flex flex-col gap-1.5">
           {prediction.options.map((opt) => {
             const isCorrect = opt === prediction.correct_option
@@ -202,6 +244,7 @@ export default function BettingCard({
                   </span>
                   <div className="flex items-center gap-2">
                     {isUserPick && <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">내 선택</span>}
+                    {stat && <span className="text-gray-400 text-xs tabular-nums">{stat.count}명</span>}
                     {pct !== null && <span className="text-gray-500 text-xs font-bold tabular-nums">{pct}%</span>}
                     {stat && <span className="text-gray-400 text-xs tabular-nums">{stat.total.toLocaleString()}P</span>}
                   </div>
@@ -223,11 +266,17 @@ export default function BettingCard({
 
   // ── 마감 / 배팅 완료 ─────────────────────────────────────
   if (isLocked || userBet) {
+    const canIncrease = !isLocked && !!userBet && !prediction.is_settled && !!userBetId
     return (
       <div className="space-y-3">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-gray-900 font-bold text-sm leading-snug">{prediction.question}</h3>
-          {deadline && !isLocked && <TimeLeft deadline={deadline} />}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {totalVoters > 0 && (
+              <span className="text-gray-400 text-xs whitespace-nowrap">{totalVoters}명 투표</span>
+            )}
+            {deadline && !isLocked && <TimeLeft deadline={deadline} />}
+          </div>
         </div>
         <div className="flex flex-col gap-1.5">
           {prediction.options.map((opt) => {
@@ -252,6 +301,7 @@ export default function BettingCard({
                   </span>
                   {showStats && (pct !== null || stat) && (
                     <div className="flex items-center gap-2 text-xs tabular-nums">
+                      {stat && <span className="text-gray-400">{stat.count}명</span>}
                       {pct !== null && <span className="text-gray-600 font-bold">{pct}%</span>}
                       {stat && <span className="text-gray-400">{stat.total.toLocaleString()}P</span>}
                     </div>
@@ -261,8 +311,60 @@ export default function BettingCard({
             )
           })}
         </div>
+
         {userBet && <p className="text-xs text-gray-500">{userBet.bet_amount.toLocaleString()}P 배팅 완료 — 결과 대기 중</p>}
         {isLocked && !userBet && <p className="text-xs text-orange-500 font-medium">세션이 시작되어 배팅이 마감되었습니다.</p>}
+
+        {/* 금액 올리기 */}
+        {canIncrease && (
+          <div className="pt-1">
+            {!showIncrease ? (
+              <button
+                onClick={() => { setShowIncrease(true); setIncreaseAmountStr(String(userBet!.bet_amount + 100)) }}
+                className="text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors"
+              >
+                금액 올리기
+              </button>
+            ) : (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                <p className="text-xs text-blue-700 font-medium">
+                  현재 {userBet!.bet_amount.toLocaleString()}P → 새 금액 입력 (최소 {(userBet!.bet_amount + 10).toLocaleString()}P)
+                </p>
+                {increaseError && <p className="text-red-500 text-xs">{increaseError}</p>}
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    min={userBet!.bet_amount + 10}
+                    step={10}
+                    value={increaseAmountStr}
+                    onChange={(e) => { setIncreaseAmountStr(e.target.value); setIncreaseError(null) }}
+                    className="flex-1 text-sm bg-white border border-blue-200 rounded-lg px-3 py-2
+                      focus:outline-none focus:border-blue-400 transition-colors
+                      [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <button
+                    onClick={handleIncrease}
+                    disabled={isIncreasePending}
+                    className="text-xs font-bold px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isIncreasePending ? '처리 중...' : '확인'}
+                  </button>
+                  <button
+                    onClick={() => { setShowIncrease(false); setIncreaseError(null) }}
+                    className="text-xs text-gray-400 hover:text-gray-600 px-2"
+                  >
+                    취소
+                  </button>
+                </div>
+                <p className="text-gray-400 text-xs">
+                  추가 차감: {isNaN(parseInt(increaseAmountStr)) ? '-' : Math.max(0, parseInt(increaseAmountStr) - userBet!.bet_amount).toLocaleString()}P
+                  &nbsp;/ 보유 {userBalance.toLocaleString()}P
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         {userBet && !commentDone && (
           <CommentInput
             commentText={commentText}
@@ -282,7 +384,12 @@ export default function BettingCard({
     <div className={`space-y-3 transition-all ${shake ? 'animate-shake' : ''}`}>
       <div className="flex items-start justify-between gap-2">
         <h3 className="text-gray-900 font-bold text-sm leading-snug">{prediction.question}</h3>
-        {deadline && <TimeLeft deadline={deadline} />}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {totalVoters > 0 && (
+            <span className="text-gray-400 text-xs whitespace-nowrap">{totalVoters}명 투표</span>
+          )}
+          {deadline && <TimeLeft deadline={deadline} />}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -314,6 +421,7 @@ export default function BettingCard({
                 </span>
                 {showStats && (pct !== null || stat) && (
                   <div className="flex items-center gap-2 text-xs tabular-nums">
+                    {stat && <span className="text-gray-400">{stat.count}명</span>}
                     {pct !== null && <span className="text-gray-600 font-bold">{pct}%</span>}
                     {stat && <span className="text-gray-400">{stat.total.toLocaleString()}P</span>}
                   </div>
