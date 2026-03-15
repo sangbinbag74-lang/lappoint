@@ -95,7 +95,7 @@ export default function LiveChat({ allComments, currentUserId, isLoggedIn }: Liv
   }
 
   return (
-    <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden h-[calc(100vh-80px)]">
+    <div className="flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden max-h-[70vh] lg:h-[calc(100vh-80px)] lg:max-h-none">
       {/* 헤더 */}
       <div className="flex-shrink-0 px-3 py-2.5 border-b border-gray-200 bg-gray-50">
         <p className="text-xs font-bold text-gray-600">💬 라이브 채팅 <span className="text-gray-400 font-normal">{allComments.length}</span></p>

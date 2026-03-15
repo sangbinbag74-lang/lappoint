@@ -1,6 +1,15 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getRaceCountryCode, getRaceCountryColor } from '@/lib/constants/raceFlags'
+import { getConstructorColor } from '@/lib/constants/teamColors'
+import { getDriverNameKo } from '@/lib/constants/driverNames'
+
+type DriverStanding = {
+  position: string
+  points: string
+  Driver: { code: string; familyName: string; givenName: string }
+  Constructors: [{ name: string }]
+}
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -23,6 +32,13 @@ export default async function HomePage() {
     .select('nickname, point_balance')
     .order('point_balance', { ascending: false })
     .limit(3)
+
+  let driverStandings: DriverStanding[] = []
+  try {
+    const res = await fetch('https://api.jolpi.ca/ergast/f1/2026/driverstandings.json', { next: { revalidate: 3600 } })
+    const json = await res.json()
+    driverStandings = json?.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings?.slice(0, 10) ?? []
+  } catch { /* ignore */ }
 
   const rankIcons = ['🥇', '🥈', '🥉']
 
@@ -153,6 +169,34 @@ export default async function HomePage() {
             <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-gray-400 shadow-sm text-sm">
               아직 참가자가 없습니다.
             </div>
+          )}
+
+          {/* 드라이버 챔피언십 TOP 10 */}
+          {driverStandings.length > 0 && (
+            <section className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-bold text-gray-800">드라이버 챔피언십</h2>
+                <Link href="/standings" className="text-blue-600 text-sm hover:underline">전체 보기</Link>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden divide-y divide-gray-100">
+                {driverStandings.map((d) => {
+                  const color = getConstructorColor(d.Constructors[0].name)
+                  const driverKo = getDriverNameKo(d.Driver.code)
+                  return (
+                    <div key={d.Driver.code} className="flex items-center justify-between px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-400 text-xs w-5 text-right">{d.position}</span>
+                        {color && <span className="w-1 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />}
+                        <span className="text-gray-800 text-sm font-medium">
+                          {driverKo ?? `${d.Driver.givenName[0]}. ${d.Driver.familyName}`}
+                        </span>
+                      </div>
+                      <span className="text-gray-700 font-bold text-sm tabular-nums">{d.points}pts</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
           )}
         </section>
       </div>

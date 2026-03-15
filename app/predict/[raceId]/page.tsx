@@ -214,7 +214,7 @@ export default async function PredictPage({ params }: PageProps) {
     : (statusConfig[race.status] ?? statusConfig.upcoming)
 
   return (
-    <div className="flex gap-4 items-start max-w-5xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-4 items-start max-w-5xl mx-auto">
     <div className="flex-1 min-w-0 space-y-6">
       {/* 경기 헤더 */}
       <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
@@ -310,7 +310,7 @@ export default async function PredictPage({ params }: PageProps) {
     </div>
 
     {/* 라이브 채팅 — 항상 우측 고정 */}
-    <div className="hidden lg:block w-72 flex-shrink-0 sticky top-16">
+    <div className="w-full lg:w-72 lg:flex-shrink-0 lg:sticky lg:top-16">
       <LiveChat
         allComments={allComments}
         currentUserId={user?.id}
