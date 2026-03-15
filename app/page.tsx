@@ -52,7 +52,7 @@ export default async function HomePage() {
               className="object-cover object-top opacity-70"
               unoptimized
             />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, transparent 0%, transparent 80%, white 100%)' }} />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
           </div>
         )}
 
@@ -65,7 +65,7 @@ export default async function HomePage() {
           </span>
         </div>
         <div className="relative flex items-center gap-3 flex-shrink-0 ml-3">
-          <span className="text-gray-400 text-xs hidden sm:block">{date}</span>
+          <span className="text-gray-500 text-xs hidden sm:block bg-white/80 px-1.5 py-0.5 rounded">{date}</span>
           {!isLocked && (
             <span className={`text-xs font-semibold group-hover:underline ${isCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
               {isCompleted ? '결과 보기 →' : '예측하기 →'}
