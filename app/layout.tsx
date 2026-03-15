@@ -17,11 +17,13 @@ export const metadata: Metadata = {
     description: 'F1 드라이버 우승·폴 포지션·패스티스트 랩 등을 예측하고 포인트를 획득하세요. 가입 즉시 1,000P 지급, 매일 출석 체크 +100P.',
     type: 'website',
     locale: 'ko_KR',
+    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'LapPoint — F1 그랑프리 예측 게임' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'LapPoint — F1 그랑프리 예측 게임',
     description: 'F1 드라이버 우승·폴 포지션·패스티스트 랩 등을 예측하고 포인트를 획득하세요.',
+    images: ['/og-image.jpg'],
   },
   keywords: ['랩포인트', 'LapPoint', 'F1 예측', 'F1 그랑프리 예측', 'F1 포인트 게임', '포뮬러원 예측', 'F1 2026', 'F1 승부 예측'],
   verification: {
