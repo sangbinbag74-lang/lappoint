@@ -25,12 +25,6 @@ export default async function HomePage() {
     .order('point_balance', { ascending: false })
     .limit(3)
 
-  const statusConfig: Record<string, { label: string; dot: string; text: string }> = {
-    upcoming:       { label: '배팅 가능', dot: 'bg-green-500',  text: 'text-green-700' },
-    active:         { label: '진행 중',   dot: 'bg-yellow-500', text: 'text-yellow-700' },
-    completed:      { label: '종료',      dot: 'bg-gray-400',   text: 'text-gray-400' },
-    betting_locked: { label: '배팅 금지', dot: 'bg-red-500',    text: 'text-red-600' },
-  }
   const rankIcons = ['🥇', '🥈', '🥉']
 
   const RaceRow = ({ race, isCompleted = false }: {
@@ -40,15 +34,13 @@ export default async function HomePage() {
     const date = new Date(race.race_date).toLocaleDateString('ko-KR', {
       month: 'short', day: 'numeric', weekday: 'short',
     })
-    const cfg = race.betting_locked
-      ? statusConfig.betting_locked
-      : (statusConfig[race.status] ?? statusConfig.upcoming)
+    const isLocked = race.betting_locked ?? false
     const countryCode = getRaceCountryCode(race.name)
 
     return (
       <Link
         href={`/predict/${race.id}`}
-        className="relative flex items-center justify-between px-4 py-3.5 overflow-hidden transition-colors group hover:bg-gray-50/80"
+        className={`relative flex items-center justify-between px-4 py-3.5 overflow-hidden transition-colors group hover:bg-gray-50/80 ${isLocked ? 'opacity-50 grayscale' : ''}`}
       >
         {/* 국기 이미지 오버레이 (우측에서 좌측으로 그라데이션 페이드) */}
         {countryCode && (
@@ -57,18 +49,14 @@ export default async function HomePage() {
               src={`https://flagcdn.com/w320/${countryCode}.png`}
               alt=""
               fill
-              className="object-cover object-top opacity-40"
+              className="object-cover object-top opacity-70"
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-white via-white/20 to-transparent" />
           </div>
         )}
 
         <div className="relative flex items-center gap-3 min-w-0">
-          <span className={`flex-shrink-0 flex items-center gap-1.5 text-xs font-medium ${cfg.text}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-            {cfg.label}
-          </span>
           <span className="text-gray-800 font-medium text-sm truncate group-hover:text-gray-900">
             {countryCode && (
               // eslint-disable-next-line @next/next/no-img-element
@@ -78,9 +66,11 @@ export default async function HomePage() {
         </div>
         <div className="relative flex items-center gap-3 flex-shrink-0 ml-3">
           <span className="text-gray-400 text-xs hidden sm:block">{date}</span>
-          <span className={`text-xs font-semibold group-hover:underline ${isCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
-            {isCompleted ? '결과 보기 →' : '예측하기 →'}
-          </span>
+          {!isLocked && (
+            <span className={`text-xs font-semibold group-hover:underline ${isCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
+              {isCompleted ? '결과 보기 →' : '예측하기 →'}
+            </span>
+          )}
         </div>
       </Link>
     )

@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export default async function AdminStatsPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
