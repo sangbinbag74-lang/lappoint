@@ -52,6 +52,8 @@ export default async function HomePage() {
     const isLocked = race.betting_locked ?? false
     const countryCode = getRaceCountryCode(race.name)
     const countryColor = getRaceCountryColor(race.name)
+    const isPast = new Date(race.race_date) < new Date()
+    const showAsCompleted = isCompleted || isPast
 
     return (
       <Link
@@ -70,8 +72,8 @@ export default async function HomePage() {
         <div className="flex items-center gap-3 flex-shrink-0 ml-3">
           <span className="text-gray-500 text-xs hidden sm:block">{date}</span>
           {!isLocked && (
-            <span className={`text-xs font-semibold group-hover:underline ${isCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
-              {isCompleted ? '결과 보기 →' : '예측하기 →'}
+            <span className={`text-xs font-semibold group-hover:underline ${showAsCompleted ? 'text-gray-500' : 'text-blue-600'}`}>
+              {showAsCompleted ? '결과 보기 →' : '예측하기 →'}
             </span>
           )}
         </div>

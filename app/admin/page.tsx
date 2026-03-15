@@ -102,6 +102,12 @@ export default async function AdminPage() {
               통계 보기 →
             </Link>
             <Link
+              href="/admin/bets"
+              className="text-xs font-semibold text-orange-600 border border-orange-200 bg-orange-50 px-3 py-1.5 rounded-lg hover:bg-orange-100 transition-colors"
+            >
+              배팅 현황 →
+            </Link>
+            <Link
               href="/admin/users"
               className="text-xs font-semibold text-purple-600 border border-purple-200 bg-purple-50 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors"
             >
