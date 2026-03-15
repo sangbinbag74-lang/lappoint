@@ -32,6 +32,32 @@ export const metadata: Metadata = {
   },
 }
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: siteUrl,
+      name: 'LapPoint',
+      alternateName: ['랩포인트', 'LapPoint F1', '랩 포인트'],
+      description: 'F1 그랑프리 예측 게임 — 드라이버 우승, 폴 포지션, 패스티스트 랩 등을 예측하고 포인트를 획득하세요.',
+      inLanguage: 'ko',
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${siteUrl}/#organization`,
+      name: 'LapPoint',
+      alternateName: '랩포인트',
+      url: siteUrl,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${siteUrl}/icon.png`,
+      },
+    },
+  ],
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -40,6 +66,10 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4638182627010286"
